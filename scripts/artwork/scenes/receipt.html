@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Inter Tight";
+        src: url(/fonts/inter-tight-roman.woff2) format("woff2");
+        font-weight: 100 900;
+      }
+    </style>
+  </head>
+  <body style="margin: 0">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/three/build/three.module.js",
+          "three/addons/": "/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import {
+        THREE,
+        setup,
+        accumulate,
+        areaLight,
+        keyLight,
+        shadowCatcher,
+        trim,
+        finish,
+        fail,
+        tokens,
+      } from "/art/lib.js";
+
+      // The POS receipt printed from the Smooth ERP sales screen, using the capture's sample items.
+      function receiptTexture(accent) {
+        const W = 900;
+        const H = 2600;
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fbfaf6";
+        ctx.fillRect(0, 0, W, H);
+        // Print below the curl: the curled end of the strip stays blank paper.
+        ctx.translate(0, 1000);
+        ctx.fillStyle = "#1d2630";
+        ctx.textBaseline = "alphabetic";
+        const centre = (text, y, font) => {
+          ctx.font = font;
+          ctx.fillText(text, (W - ctx.measureText(text).width) / 2, y);
+        };
+        ctx.fillStyle = accent;
+        centre("SMOOTH ERP", 230, "800 92px 'Inter Tight'");
+        ctx.fillStyle = "#1d2630";
+        centre("POINT OF SALE", 300, "600 38px 'Inter Tight'");
+        const dash = (y) => {
+          ctx.fillStyle = "#1d2630";
+          for (let x = 70; x < W - 70; x += 26) ctx.fillRect(x, y, 14, 4);
+        };
+        dash(370);
+        ctx.font = "600 36px 'Inter Tight'";
+        ctx.fillText("ITEM", 70, 450);
+        ctx.fillText("QTY", 520, 450);
+        ctx.fillText("TOTAL", W - 70 - ctx.measureText("TOTAL").width, 450);
+        const items = [
+          ["Cotton Shirt – White", "1", "245"],
+          ["Slim Trousers – Navy", "1", "410"],
+          ["Leather Belt", "1", "165"],
+        ];
+        ctx.font = "500 40px 'Inter Tight'";
+        items.forEach(([name, qty, total], index) => {
+          const y = 540 + index * 82;
+          ctx.fillText(name, 70, y);
+          ctx.fillText(qty, 540, y);
+          ctx.fillText(total, W - 70 - ctx.measureText(total).width, y);
+        });
+        dash(800);
+        ctx.font = "800 64px 'Inter Tight'";
+        ctx.fillText("TOTAL", 70, 900);
+        ctx.fillText("820", W - 70 - ctx.measureText("820").width, 900);
+        dash(960);
+        // barcode
+        let seed = 11;
+        const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+        let x = 110;
+        while (x < W - 110) {
+          const w = 4 + Math.floor(rand() * 4) * 4;
+          ctx.fillRect(x, 1060, w, 190);
+          x += w + 4 + Math.floor(rand() * 3) * 4;
+        }
+        centre("THANK YOU", 1360, "600 40px 'Inter Tight'");
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 16;
+        return texture;
+      }
+
+      // Torn zig-zag at the top edge, as an alpha mask.
+      function tearMask() {
+        const W = 256;
+        const H = 1024;
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        // The canvas bottom maps to the strip's near end, where it was torn off.
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, H - 12);
+        for (let x = 0; x <= W; x += 16) ctx.lineTo(x + 8, x % 32 === 0 ? H : H - 12);
+        ctx.lineTo(W, H - 12);
+        ctx.lineTo(W, 0);
+        ctx.fill();
+        return new THREE.CanvasTexture(canvas);
+      }
+
+      try {
+        const params = new URLSearchParams(location.search);
+        const size = Number(params.get("size") ?? 1400);
+        const frames = Number(params.get("frames") ?? 40);
+        await document.fonts.load("800 92px 'Inter Tight'");
+        const { renderer, scene } = setup({
+          width: size,
+          height: size,
+          exposure: 1.0,
+          envIntensity: 0.6,
+        });
+
+        // A strip of paper lying flat, its top end curling up into a loose roll.
+        const L = 6.4;
+        const Wd = 2.2;
+        const geometry = new THREE.PlaneGeometry(Wd, L, 8, 260);
+        const position = geometry.attributes.position;
+        const flat = L * 0.62;
+        const radius = 0.55;
+        for (let i = 0; i < position.count; i++) {
+          const x = position.getX(i);
+          const s = position.getY(i) + L / 2; // distance from the bottom end
+          let y = 0;
+          let z = -s;
+          if (s > flat) {
+            const angle = (s - flat) / radius;
+            z = -flat - Math.sin(angle) * radius;
+            y = (1 - Math.cos(angle)) * radius;
+          }
+          y += Math.sin(s * 1.7) * 0.025;
+          position.setXYZ(i, x, y + 0.01, z);
+        }
+        geometry.computeVertexNormals();
+        geometry.translate(0, 0, L * 0.4);
+        const front = new THREE.Mesh(
+          geometry,
+          new THREE.MeshStandardMaterial({
+            map: receiptTexture((await tokens())["color-scene-smooth-erp-accent"]),
+            alphaMap: tearMask(),
+            alphaTest: 0.5,
+            roughness: 0.82,
+            side: THREE.FrontSide,
+          }),
+        );
+        const back = new THREE.Mesh(
+          geometry,
+          new THREE.MeshStandardMaterial({
+            color: 0xeeece6,
+            alphaMap: tearMask(),
+            alphaTest: 0.5,
+            roughness: 0.9,
+            side: THREE.BackSide,
+          }),
+        );
+        // the plane faces +z; lay it on the ground facing up
+        for (const mesh of [front, back]) {
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+        }
+        const receipt = new THREE.Group();
+        receipt.add(front, back);
+        // The plane was built in x/y; the bend wrote ground coordinates into y/z, so face it up.
+        receipt.rotation.y = 0.32;
+        scene.add(receipt);
+        // flip normals orientation: the geometry's front face points along +y after the bend
+        scene.add(shadowCatcher(30, 0.3));
+        const light = keyLight(scene, { intensity: 2.2, position: [3, 10, 5], size: 6 });
+        const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+        camera.position.set(3.2, 10.5, 8.5);
+        camera.lookAt(0, 0.4, -0.2);
+        const canvas = await accumulate({
+          renderer,
+          scene,
+          camera,
+          frames,
+          jitter: areaLight(light, new THREE.Vector3(3, 10, 5), 1.4),
+        });
+        finish(trim(canvas, 16));
+      } catch (error) {
+        fail(error);
+      }
+    </script>
+  </body>
+</html>

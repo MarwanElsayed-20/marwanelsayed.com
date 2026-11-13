@@ -1,0 +1,269 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Inter Tight";
+        src: url(/fonts/inter-tight-roman.woff2) format("woff2");
+        font-weight: 100 900;
+      }
+    </style>
+  </head>
+  <body style="margin: 0">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/three/build/three.module.js",
+          "three/addons/": "/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import {
+        THREE,
+        setup,
+        accumulate,
+        areaLight,
+        keyLight,
+        shadowCatcher,
+        trim,
+        finish,
+        fail,
+        tokens,
+      } from "/art/lib.js";
+      import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+
+      // Wajihni's periwinkle, from the scene tokens.
+      let PERIWINKLE = "";
+
+      // The card face, in Wajihni's own landing-page look: its wordmark and tagline, a student chip,
+      // a photo outline and placeholder bars (no invented names).
+      function cardTexture() {
+        const W = 1000;
+        const H = 1400;
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#181820";
+        ctx.fillRect(0, 0, W, H);
+        const glow = ctx.createRadialGradient(W * 0.7, H * 0.3, 40, W * 0.7, H * 0.3, W * 0.8);
+        glow.addColorStop(0, "rgba(125,136,255,0.28)");
+        glow.addColorStop(1, "rgba(125,136,255,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+        // slot
+        ctx.fillStyle = "#0b0b10";
+        ctx.beginPath();
+        ctx.roundRect(W / 2 - 110, 70, 220, 44, 22);
+        ctx.fill();
+        ctx.fillStyle = PERIWINKLE;
+        ctx.font = "800 150px 'Inter Tight'";
+        ctx.fillText("Wajihni", 80, 330);
+        ctx.fillStyle = "#c9cbe0";
+        ctx.font = "500 40px 'Inter Tight'";
+        ctx.fillText("Where careers launch and", 84, 410);
+        ctx.fillText("futures are built.", 84, 462);
+        // photo outline
+        ctx.strokeStyle = "rgba(201,203,224,0.55)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.roundRect(84, 560, 300, 360, 28);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(234, 700, 70, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(234, 900, 130, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+        // placeholder lines
+        ctx.fillStyle = "rgba(236,238,250,0.85)";
+        ctx.beginPath();
+        ctx.roundRect(440, 600, 420, 44, 22);
+        ctx.fill();
+        ctx.fillStyle = "rgba(201,203,224,0.4)";
+        ctx.beginPath();
+        ctx.roundRect(440, 680, 320, 32, 16);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.roundRect(440, 740, 360, 32, 16);
+        ctx.fill();
+        // student chip
+        ctx.fillStyle = PERIWINKLE;
+        ctx.beginPath();
+        ctx.roundRect(84, 1080, 330, 96, 48);
+        ctx.fill();
+        ctx.fillStyle = "#13151e";
+        ctx.font = "800 48px 'Inter Tight'";
+        ctx.fillText("STUDENT", 140, 1144);
+        ctx.fillStyle = "rgba(201,203,224,0.5)";
+        ctx.font = "600 34px 'Inter Tight'";
+        ctx.fillText("INTERNSHIPS · JOBS", 84, 1290);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 16;
+        return texture;
+      }
+
+      // Lanyard webbing: periwinkle with the wordmark repeated along it.
+      function strapTexture() {
+        const W = 1024;
+        const H = 128;
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = PERIWINKLE;
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#13151e";
+        ctx.font = "800 64px 'Inter Tight'";
+        ctx.textBaseline = "middle";
+        ctx.fillText("WAJIHNI", 60, H / 2 + 4);
+        ctx.fillText("WAJIHNI", 572, H / 2 + 4);
+        ctx.fillStyle = "rgba(19,21,30,0.25)";
+        ctx.fillRect(0, 6, W, 4);
+        ctx.fillRect(0, H - 10, W, 4);
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.anisotropy = 16;
+        return texture;
+      }
+
+      // A flat strap following a curve just above the ground.
+      function ribbon(points, width, texture) {
+        const curve = new THREE.CatmullRomCurve3(points);
+        const segments = 400;
+        const positions = [];
+        const uvs = [];
+        const indices = [];
+        const up = new THREE.Vector3(0, 1, 0);
+        const length = curve.getLength();
+        for (let i = 0; i <= segments; i++) {
+          const t = i / segments;
+          const p = curve.getPointAt(t);
+          const tangent = curve.getTangentAt(t);
+          const side = new THREE.Vector3().crossVectors(up, tangent).normalize();
+          for (const s of [-0.5, 0.5]) {
+            const v = p.clone().addScaledVector(side, s * width);
+            positions.push(v.x, v.y, v.z);
+            uvs.push((t * length) / (width * 8), s + 0.5);
+          }
+          if (i < segments) {
+            const a = i * 2;
+            indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+          }
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setIndex(indices);
+        geometry.computeVertexNormals();
+        const mesh = new THREE.Mesh(
+          geometry,
+          new THREE.MeshStandardMaterial({ map: texture, roughness: 0.7, side: THREE.DoubleSide }),
+        );
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+      }
+
+      try {
+        const params = new URLSearchParams(location.search);
+        const size = Number(params.get("size") ?? 1400);
+        const frames = Number(params.get("frames") ?? 40);
+        await document.fonts.load("800 150px 'Inter Tight'");
+        PERIWINKLE = (await tokens())["color-scene-wajihni-accent"];
+        const { renderer, scene } = setup({
+          width: size,
+          height: size,
+          exposure: 1.05,
+          envIntensity: 0.8,
+        });
+
+        const cw = 2.1;
+        const ch = 2.94;
+        const face = new THREE.MeshPhysicalMaterial({
+          map: cardTexture(),
+          roughness: 0.35,
+          clearcoat: 1,
+          clearcoatRoughness: 0.12,
+        });
+        const edge = new THREE.MeshStandardMaterial({ color: 0x1d1f2a, roughness: 0.5 });
+        const card = new THREE.Mesh(new RoundedBoxGeometry(cw, 0.05, ch, 4, 0.02), [
+          edge,
+          edge,
+          face,
+          edge,
+          edge,
+          edge,
+        ]);
+        card.position.set(0.2, 0.03, 0.4);
+        card.rotation.y = -0.18;
+        card.castShadow = true;
+        card.receiveShadow = true;
+        scene.add(card);
+
+        // Clip: a metal ring through the slot and a small clasp.
+        const metal = new THREE.MeshPhysicalMaterial({
+          color: 0xd9dbe0,
+          metalness: 1,
+          roughness: 0.25,
+        });
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 24, 64), metal);
+        const slot = new THREE.Vector3(0, 0.08, -ch / 2 + 0.18).applyAxisAngle(
+          new THREE.Vector3(0, 1, 0),
+          -0.18,
+        );
+        ring.position.copy(card.position).add(slot);
+        ring.rotation.x = Math.PI / 2 - 0.25;
+        ring.castShadow = true;
+        scene.add(ring);
+        const clasp = new THREE.Mesh(new RoundedBoxGeometry(0.26, 0.12, 0.5, 3, 0.05), metal);
+        clasp.position.copy(ring.position).add(new THREE.Vector3(-0.03, 0.02, -0.42));
+        clasp.rotation.y = -0.18;
+        clasp.castShadow = true;
+        scene.add(clasp);
+
+        // The strap leaves the clasp, loops loosely on the desk and runs out of frame.
+        const start = clasp.position.clone().add(new THREE.Vector3(0, 0.02, -0.25));
+        const strap = ribbon(
+          [
+            start,
+            start.clone().add(new THREE.Vector3(-0.3, 0.02, -0.6)),
+            new THREE.Vector3(-1.6, 0.03, -1.9),
+            new THREE.Vector3(-2.6, 0.03, -0.6),
+            new THREE.Vector3(-2.3, 0.03, 1.4),
+            new THREE.Vector3(-1.0, 0.03, 2.4),
+            new THREE.Vector3(1.2, 0.035, 2.6),
+            new THREE.Vector3(2.5, 0.035, 1.6),
+            new THREE.Vector3(2.7, 0.03, -0.4),
+            new THREE.Vector3(1.6, 0.03, -1.9),
+            start.clone().add(new THREE.Vector3(0.35, 0.04, -0.7)),
+            start.clone().add(new THREE.Vector3(0.08, 0.05, -0.05)),
+          ],
+          0.34,
+          strapTexture(),
+        );
+        scene.add(strap);
+
+        scene.add(shadowCatcher(30, 0.34));
+        const light = keyLight(scene, { intensity: 2.0, position: [3, 10, 5], size: 6 });
+        const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+        camera.position.set(1.6, 10.5, 6.8);
+        camera.lookAt(0, 0, 0.2);
+        const canvas = await accumulate({
+          renderer,
+          scene,
+          camera,
+          frames,
+          jitter: areaLight(light, new THREE.Vector3(3, 10, 5), 1.3),
+        });
+        finish(trim(canvas, 16));
+      } catch (error) {
+        fail(error);
+      }
+    </script>
+  </body>
+</html>

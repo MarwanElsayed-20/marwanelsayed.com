@@ -1,0 +1,226 @@
+{
+  "toolswift-customer-dashboard": {
+    "tone": "light",
+    "field": "#ecebe0",
+    "wash": "#ebe2cb",
+    "accent": "#a3804a",
+    "deep": "#745d3b",
+    "glow": "#e9b76a"
+  },
+  "toolswift-admin-platform": {
+    "tone": "light",
+    "field": "#ecebe4",
+    "wash": "#ede2d6",
+    "accent": "#9b7660",
+    "deep": "#775d4e",
+    "glow": "#efb694"
+  },
+  "toolswift-marketing": {
+    "tone": "dark",
+    "field": "#241b16",
+    "wash": "#40291d",
+    "accent": "#9e5732",
+    "deep": "#191514",
+    "glow": "#9e5732"
+  },
+  "wajihni": {
+    "tone": "dark",
+    "field": "#0f2322",
+    "wash": "#0d3d39",
+    "accent": "#079284",
+    "deep": "#0f1919",
+    "glow": "#079284"
+  },
+  "smooth-erp": {
+    "tone": "light",
+    "field": "#ece9df",
+    "wash": "#ebdbc8",
+    "accent": "#b07547",
+    "deep": "#745136",
+    "glow": "#ea9c5f"
+  },
+  "smooth-erp-landing-pages": {
+    "tone": "light",
+    "field": "#d7e1df",
+    "wash": "#b4c7c8",
+    "accent": "#154e5d",
+    "deep": "#142e35",
+    "glow": "#154e5d"
+  },
+  "hemex-dashboards": {
+    "tone": "light",
+    "field": "#dedfe4",
+    "wash": "#c8c2d6",
+    "accent": "#603e96",
+    "deep": "#36274f",
+    "glow": "#603e96"
+  },
+  "hemex-landing-page": {
+    "tone": "dark",
+    "field": "#1a1522",
+    "wash": "#291a39",
+    "accent": "#7a559d",
+    "deep": "#141319",
+    "glow": "#592a84"
+  },
+  "aligna": {
+    "tone": "light",
+    "field": "#ede6de",
+    "wash": "#eed4c6",
+    "accent": "#c36646",
+    "deep": "#794533",
+    "glow": "#f48058"
+  },
+  "camufacturing-dashboard": {
+    "tone": "light",
+    "field": "#ede8dc",
+    "wash": "#efd9c0",
+    "accent": "#b96f30",
+    "deep": "#7a4e28",
+    "glow": "#f69440"
+  },
+  "camufacturing-site": {
+    "tone": "light",
+    "field": "#e5e3db",
+    "wash": "#d9cdbd",
+    "accent": "#a26735",
+    "deep": "#543923",
+    "glow": "#a26735"
+  },
+  "falcon-translation-dashboard": {
+    "tone": "light",
+    "field": "#e1e2e9",
+    "wash": "#d0c9e2",
+    "accent": "#7f58c2",
+    "deep": "#443363",
+    "glow": "#7f58c2"
+  },
+  "falcons-gt-motors": {
+    "tone": "light",
+    "field": "#e0e0d9",
+    "wash": "#cec5ba",
+    "accent": "#774728",
+    "deep": "#412b1e",
+    "glow": "#774728"
+  },
+  "falconsgt-sml": {
+    "tone": "light",
+    "field": "#e9e0dd",
+    "wash": "#e5c4c2",
+    "accent": "#d24448",
+    "deep": "#692a2c",
+    "glow": "#d24448"
+  },
+  "falconsgt-luxury": {
+    "tone": "dark",
+    "field": "#262219",
+    "wash": "#463a22",
+    "accent": "#af8b41",
+    "deep": "#1a1815",
+    "glow": "#af8b41"
+  },
+  "home-central-stores": {
+    "tone": "light",
+    "field": "#e1deda",
+    "wash": "#cfc1bb",
+    "accent": "#7d372e",
+    "deep": "#432420",
+    "glow": "#7d372e"
+  },
+  "filterco": {
+    "tone": "light",
+    "field": "#d9e4e5",
+    "wash": "#bad0d7",
+    "accent": "#2d719a",
+    "deep": "#1f3e51",
+    "glow": "#2d719a"
+  },
+  "one-lax": {
+    "tone": "dark",
+    "field": "#222324",
+    "wash": "#3c3d3e",
+    "accent": "#929292",
+    "deep": "#18191a",
+    "glow": "#929292"
+  },
+  "hamilton-pharmacy": {
+    "tone": "light",
+    "field": "#dbe2ea",
+    "wash": "#c1cae5",
+    "accent": "#465acd",
+    "deep": "#2b3468",
+    "glow": "#465acd"
+  },
+  "commissioners-pharmacy": {
+    "tone": "light",
+    "field": "#dde5ef",
+    "wash": "#c6d3f2",
+    "accent": "#5576f2",
+    "deep": "#33437e",
+    "glow": "#597cff"
+  },
+  "amherst-supply": {
+    "tone": "light",
+    "field": "#d9e0e2",
+    "wash": "#bac5d0",
+    "accent": "#2d467f",
+    "deep": "#1f2b45",
+    "glow": "#2d467f"
+  },
+  "great-north-rc": {
+    "tone": "light",
+    "field": "#ebe0da",
+    "wash": "#e8c5bd",
+    "accent": "#de4833",
+    "deep": "#6f2b23",
+    "glow": "#de4833"
+  },
+  "lumber-cart": {
+    "tone": "light",
+    "field": "#e4edd8",
+    "wash": "#d7e8b5",
+    "accent": "#6e9010",
+    "deep": "#526716",
+    "glow": "#9dcd17"
+  },
+  "slack-lumber": {
+    "tone": "light",
+    "field": "#dee2e9",
+    "wash": "#c7cae2",
+    "accent": "#5d5bc4",
+    "deep": "#353464",
+    "glow": "#5d5bc4"
+  },
+  "mdr-electrical-supply": {
+    "tone": "light",
+    "field": "#d7e4e4",
+    "wash": "#b4d0d5",
+    "accent": "#157290",
+    "deep": "#143e4c",
+    "glow": "#157290"
+  },
+  "rd-electrical-supply": {
+    "tone": "light",
+    "field": "#ece8db",
+    "wash": "#ecdabd",
+    "accent": "#b07129",
+    "deep": "#754f24",
+    "glow": "#eb9736"
+  },
+  "expat-shop": {
+    "tone": "light",
+    "field": "#e0e8dc",
+    "wash": "#cedac0",
+    "accent": "#6c893b",
+    "deep": "#414f29",
+    "glow": "#789841"
+  },
+  "balcon-studio": {
+    "tone": "light",
+    "field": "#e3e4de",
+    "wash": "#d4d0c6",
+    "accent": "#8e7358",
+    "deep": "#4b3f33",
+    "glow": "#8e7358"
+  }
+}

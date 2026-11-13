@@ -1,0 +1,62 @@
+{
+  "name": "portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.14.2",
+  "engines": {
+    "node": "^22.22.2"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "measure:home": "node scripts/measure-home.mjs",
+    "artwork:build": "node scripts/artwork/run.mjs",
+    "worlds:build": "node scripts/work-worlds/run.mjs && node scripts/work-worlds/proofs.mjs",
+    "brand:build": "node scripts/brand/run.mjs",
+    "illustrations:build": "node scripts/illustrations/run.mjs build",
+    "illustrations:check": "node scripts/illustrations/run.mjs check",
+    "launch:site": "node scripts/launch/run.mjs site",
+    "launch:check": "node scripts/launch/run.mjs check",
+    "links:check": "node scripts/launch/run.mjs links",
+    "check": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run test:e2e"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.8.1",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.1.0",
+    "gsap": "^3.15.0",
+    "lenis": "^1.3.27",
+    "next": "^16.4.1",
+    "react": "19",
+    "react-dom": "19",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.0",
+    "jsdom": "^30.1.2",
+    "postcss": "^8.5.30",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.4"
+  },
+  "type": "module"
+}

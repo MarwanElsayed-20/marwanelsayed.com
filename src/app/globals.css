@@ -1,0 +1,2461 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+@import "../styles/font-fallbacks.css";
+
+/* Base styles live in the base layer so Tailwind utilities (for example focus:outline-none or
+   focus-visible:outline-hidden) can override them. The reduced-motion rule stays outside any layer on
+   purpose: it must beat every utility. */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* The page has its own slim scroll bar (see ScrollBar), so the system one is hidden. */
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}
+
+:root {
+  --header-height: clamp(4.25rem, 4.4vw, 7rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* In-page sections sit clear of the viewport edge after native anchor navigation. */
+#work,
+#services,
+#contact {
+  scroll-margin-top: 24px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Paper grain: a faint noise laid over the loader panel and the page. It is
+   alpha-only (no colour values) and never receives pointer events. */
+[data-grain]::before,
+[data-page-shell]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Opening sequence. Hidden unless the boot script in <head> activated it, so it can never block
+   visitors without scripting, with reduced motion, or past the intro. The panel carries a huge
+   dark shadow that becomes the frame as the panel shrinks, and a clear panel is a window onto
+   the page. The animation is a last resort: if the loader's script never finishes, it leaves. */
+[data-loader-root] {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+[data-loader-panel] {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+html[data-loader="active"] [data-loader-root] {
+  display: block;
+  animation: loader-failsafe 0.01s linear 12s forwards;
+}
+@keyframes loader-failsafe {
+  to {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* A dark surface with slow soft streaks of light like folded silk: the menu and the hero panel. */
+[data-silk] {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+[data-silk]::before,
+[data-silk]::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: -35%;
+  width: 170%;
+  will-change: transform;
+}
+[data-silk]::before {
+  background:
+    radial-gradient(
+      ellipse 40% 80% at 28% 0%,
+      color-mix(in srgb, var(--color-background) 24%, transparent),
+      transparent 70%
+    ),
+    repeating-linear-gradient(
+      100deg,
+      transparent 0 3rem,
+      color-mix(in srgb, var(--color-background) 5%, transparent) 7rem,
+      color-mix(in srgb, var(--color-background) 12%, transparent) 11rem,
+      color-mix(in srgb, var(--color-background) 5%, transparent) 15rem,
+      transparent 19rem
+    );
+  opacity: 0.85;
+  animation: silk-a 13s ease-in-out infinite alternate;
+}
+[data-silk]::after {
+  background: repeating-linear-gradient(
+    80deg,
+    transparent 0 6rem,
+    color-mix(in srgb, var(--color-background) 4%, transparent) 12rem,
+    color-mix(in srgb, var(--color-background) 9%, transparent) 18rem,
+    color-mix(in srgb, var(--color-background) 4%, transparent) 24rem,
+    transparent 30rem
+  );
+  opacity: 0.7;
+  animation: silk-b 19s ease-in-out infinite alternate;
+}
+@keyframes silk-a {
+  from {
+    transform: translateX(8%) skewX(-6deg);
+  }
+  to {
+    transform: translateX(-22%) skewX(6deg);
+  }
+}
+@keyframes silk-b {
+  from {
+    transform: translateX(-20%) skewX(5deg);
+  }
+  to {
+    transform: translateX(10%) skewX(-5deg);
+  }
+}
+
+/* The footer sits pinned behind the page until the page end rises off it: its silk waits too. */
+html[data-motion="on"] [data-uncover]:not([data-uncovered]) [data-silk]::before,
+html[data-motion="on"] [data-uncover]:not([data-uncovered]) [data-silk]::after {
+  animation-play-state: paused;
+  will-change: auto;
+}
+/* While the menu is open the page is inert and pushed aside; a footer still covered by the page is
+   not painted then, so the menu's own animation has the frame to itself. */
+html[data-menu-open] [data-uncover]:not([data-uncovered]) {
+  visibility: hidden;
+}
+/* The "Loading" card of a page change only exists while that change plays. */
+[data-curtain-card] {
+  visibility: hidden;
+}
+
+/* A pale band of light that drifts across the hero panel, behind the logos. */
+[data-hero-sheen] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 230%;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      104deg,
+      transparent 0 30%,
+      color-mix(in srgb, var(--color-background) 5%, transparent) 41%,
+      color-mix(in srgb, var(--color-background) 24%, transparent) 47%,
+      color-mix(in srgb, var(--color-background) 5%, transparent) 53%,
+      transparent 60%
+    ),
+    linear-gradient(
+      104deg,
+      transparent 0 52%,
+      color-mix(in srgb, var(--color-background) 9%, transparent) 62%,
+      transparent 74%
+    );
+  will-change: transform;
+  animation: hero-sheen 11s ease-in-out infinite alternate;
+}
+@keyframes hero-sheen {
+  to {
+    transform: translateX(-56.5%);
+  }
+}
+
+/* Light passing over the Selected work prints on their dark panel: soft bright bands with faint
+   shadow between them, drifting slowly, as if the panel sat under moving light. */
+[data-panel-sheen] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 240%;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      112deg,
+      transparent 0 22%,
+      color-mix(in srgb, var(--color-foreground) 16%, transparent) 30%,
+      transparent 36%,
+      color-mix(in srgb, var(--color-background) 14%, transparent) 42%,
+      color-mix(in srgb, var(--color-background) 22%, transparent) 45%,
+      color-mix(in srgb, var(--color-background) 14%, transparent) 48%,
+      transparent 54%
+    ),
+    linear-gradient(
+      112deg,
+      transparent 0 58%,
+      color-mix(in srgb, var(--color-foreground) 12%, transparent) 64%,
+      transparent 70%,
+      color-mix(in srgb, var(--color-background) 10%, transparent) 76%,
+      transparent 84%
+    );
+  will-change: transform;
+  animation: panel-sheen 14s ease-in-out infinite alternate;
+}
+@keyframes panel-sheen {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-58%);
+  }
+}
+
+/* The page's own scroll bar: a faint track at the right edge with a dark thumb. */
+[data-scrollbar] {
+  position: fixed;
+  top: 9vh;
+  right: 0.6rem;
+  bottom: 10vh;
+  z-index: 60;
+  width: 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-foreground) 9%, transparent);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+[data-scrollbar][data-active="true"] {
+  opacity: 1;
+}
+html[data-menu-open="true"] [data-scrollbar] {
+  opacity: 0;
+}
+[data-scrollbar-thumb] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--color-foreground);
+  touch-action: none;
+}
+[data-scrollbar-thumb]::after {
+  content: "";
+  position: absolute;
+  inset: 0 -0.5rem;
+}
+@media print {
+  [data-scrollbar] {
+    display: none;
+  }
+}
+
+/* Everything that can be pressed shows the hand; a disabled button says so. */
+a[href],
+button:not(:disabled),
+summary,
+select,
+[role="button"]:not([aria-disabled="true"]),
+label[for] {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Cursor. Mounted only for a fine, hovering pointer without reduced motion. The system pointer
+   stays visible. Ink is dark on the paper and light on sections marked data-surface="dark". */
+[data-cursor-root] {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+[data-cursor-root][data-cursor-visible="true"] {
+  opacity: 1;
+}
+[data-cursor-root][data-cursor-state="hidden"],
+html[data-menu-open] [data-cursor-root] {
+  opacity: 0;
+}
+[data-cursor-canvas] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* Entrance motion. Targets are hidden ONLY when the boot script set data-motion="on" (so never for
+   reduced motion or without scripting) and until the reveal controller marks them data-revealed.
+   The animation is a last resort that shows them if the controller never runs. */
+[data-reveal="mask"] {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+[data-reveal="mask"] > * {
+  display: inline-block;
+}
+html[data-motion="on"] [data-reveal="fade"]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, 1.5rem, 0);
+}
+html[data-motion="on"] [data-reveal="mask"]:not([data-revealed]) > * {
+  transform: translate3d(0, 115%, 0);
+}
+html[data-motion="on"] [data-reveal="clip"]:not([data-revealed]) {
+  clip-path: inset(0% 0% 100% 0%);
+}
+/* The WhatsApp button steps aside for the menu, a page change and the uncovered footer, which has
+   the same link. */
+html[data-menu-open] [data-whatsapp-button],
+html[data-page-transition="true"] [data-whatsapp-button],
+body:has(footer[data-uncovered]) [data-whatsapp-button] {
+  opacity: 0;
+  pointer-events: none;
+}
+/* The home focus statement: words wait scattered-invisible until FocusStatementMotion plays them. */
+html[data-motion="on"] [data-focus-statement]:not([data-live]) [data-focus-word] {
+  opacity: 0;
+  animation: reveal-failsafe 0.01s linear 10s forwards;
+}
+html[data-motion="on"] [data-focus-statement]:not([data-live]) [data-focus-action] {
+  opacity: 0;
+  animation: reveal-failsafe 0.01s linear 10s forwards;
+}
+/* The button is reachable from the keyboard even before the scroll has brought it in. */
+[data-focus-action]:focus-within {
+  opacity: 1 !important;
+}
+/* With motion the statement is a tall track holding one pinned screen the words scrub through. */
+html[data-motion="on"] [data-focus-statement] {
+  height: calc(var(--focus-track) * 100svh);
+}
+html[data-motion="on"] [data-focus-screen] {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  align-items: center;
+}
+@keyframes reveal-failsafe {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes reveal-failsafe-open {
+  to {
+    clip-path: var(--open-clip);
+  }
+}
+@keyframes reveal-failsafe-clip {
+  to {
+    clip-path: inset(0% 0% 0% 0%);
+  }
+}
+/* The Services section's motion. RevealController only marks a
+   target as revealed (and passes its delay in --print-delay); these transitions do the rest. */
+:root {
+  --print-ease: cubic-bezier(0.65, 0, 0.25, 1);
+  --set-ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+/* "print": a frame wipes in from the left, then its picture wipes in behind it and goes from
+   grayscale to colour. --print-step staggers the pieces of one plate. */
+html[data-motion="on"] [data-reveal="print"] [data-print-frame],
+html[data-motion="on"] [data-reveal="print"][data-print-frame] {
+  /* --print-open lets a frame's clip open outward, so its shadow is not cut off. */
+  clip-path: inset(var(--print-open, 0px));
+  transition: clip-path 0.32s calc(var(--print-delay, 0s) + var(--print-step, 0s)) var(--print-ease);
+}
+html[data-motion="on"] [data-reveal="print"] [data-print-picture] {
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 0.64s calc(var(--print-delay, 0s) + var(--print-step, 0s) + 0.18s) var(--print-ease),
+    filter 0.76s calc(var(--print-delay, 0s) + var(--print-step, 0s) + 0.76s) ease;
+}
+html[data-motion="on"] [data-reveal="print"]:not([data-revealed]) [data-print-frame],
+html[data-motion="on"] [data-reveal="print"][data-print-frame]:not([data-revealed]) {
+  clip-path: inset(0 100% 0 0);
+}
+html[data-motion="on"] [data-reveal="print"]:not([data-revealed]) [data-print-picture] {
+  clip-path: inset(0 100% 0 0);
+  filter: grayscale(1) contrast(1.18);
+}
+@keyframes reveal-failsafe-print {
+  to {
+    clip-path: inset(0 0 0 0);
+    filter: none;
+  }
+}
+/* The plate numbers fade in once their piece is down; a pale band of light crosses the plate. */
+html[data-motion="on"] [data-services-plate] [data-plate-number] {
+  transition: opacity 0.3s calc(var(--print-step, 0s) + 0.9s) ease;
+}
+html[data-motion="on"] [data-services-plate]:not([data-revealed]) [data-plate-number] {
+  opacity: 0;
+}
+html[data-motion="on"] [data-services-plate]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 36%,
+    color-mix(in srgb, var(--color-highlight) 30%, transparent) 50%,
+    transparent 64%
+  );
+}
+html[data-motion="on"] [data-services-plate][data-revealed]::after {
+  animation: services-sweep 1s var(--print-ease) both;
+}
+@keyframes services-sweep {
+  from {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+/* "rule": a list's top rule draws across. "row": each row slides in on its own, as it comes into view. */
+[data-reveal="rule"],
+[data-reveal="ledger"] {
+  position: relative;
+}
+[data-reveal="rule"]::before,
+[data-reveal="ledger"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--color-foreground);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+html[data-motion="on"] [data-reveal="rule"]::before,
+html[data-motion="on"] [data-reveal="ledger"]::before {
+  transition: transform 0.62s var(--print-ease);
+}
+html[data-motion="on"] [data-reveal="row"] {
+  transition:
+    opacity 0.4s var(--set-ease),
+    translate 0.4s var(--set-ease);
+}
+html[data-motion="on"] [data-reveal="rule"]:not([data-revealed])::before,
+html[data-motion="on"] [data-reveal="ledger"]:not([data-revealed])::before {
+  transform: scaleX(0);
+}
+/* "ledger": a rule that draws, and the items under it that slide in 14px one after another from
+   0.22s, 0.07s apart (the lists on the services pages). */
+html[data-motion="on"] [data-reveal="ledger"] > * {
+  transition:
+    opacity 0.56s var(--set-ease),
+    translate 0.56s var(--set-ease);
+}
+html[data-motion="on"] [data-reveal="ledger"]:not([data-revealed]) > * {
+  opacity: 0;
+  translate: -14px 0;
+}
+html[data-motion="on"] [data-reveal="ledger"][data-revealed] > :nth-child(1) {
+  transition-delay: 0.22s;
+}
+html[data-motion="on"] [data-reveal="ledger"][data-revealed] > :nth-child(2) {
+  transition-delay: 0.29s;
+}
+html[data-motion="on"] [data-reveal="ledger"][data-revealed] > :nth-child(3) {
+  transition-delay: 0.36s;
+}
+html[data-motion="on"] [data-reveal="ledger"][data-revealed] > :nth-child(4) {
+  transition-delay: 0.43s;
+}
+html[data-motion="on"] [data-reveal="ledger"][data-revealed] > :nth-child(5) {
+  transition-delay: 0.5s;
+}
+html[data-motion="on"] [data-reveal="ledger"][data-revealed] > :nth-child(n + 6) {
+  transition-delay: 0.56s;
+}
+html[data-motion="on"] [data-reveal="row"]:not([data-revealed]) {
+  opacity: 0;
+  translate: -14px 0;
+}
+/* The case study's own kinds (RevealController): "scene" rises, "open" waits as a point at the
+   centre of its polygon, "stagger" holds its children back. */
+html[data-motion="on"] [data-reveal="scene"]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, 2.9rem, 0);
+}
+html[data-motion="on"] [data-reveal="open"]:not([data-revealed]) {
+  clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%);
+}
+html[data-motion="on"] [data-reveal="stagger"]:not([data-revealed]) > * {
+  opacity: 0;
+  transform: translate3d(0, 2.6rem, 0);
+}
+/* The last resort: if the reveal controller never runs (it marks the page data-reveal-ready as soon
+   as it mounts), targets show themselves after 10s. Once it runs, only it reveals them, so a
+   target further down never appears early and then plays its entrance. */
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="fade"]:not([data-revealed]),
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="scene"]:not([data-revealed]),
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="stagger"]:not([data-revealed]) > *,
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="mask"]:not([data-revealed]) > * {
+  animation: reveal-failsafe 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="open"]:not([data-revealed]) {
+  animation: reveal-failsafe-open 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="clip"]:not([data-revealed]) {
+  animation: reveal-failsafe-clip 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready])
+  [data-reveal="print"]:not([data-revealed])
+  [data-print-frame],
+html[data-motion="on"]:not([data-reveal-ready])
+  [data-reveal="print"][data-print-frame]:not([data-revealed]),
+html[data-motion="on"]:not([data-reveal-ready])
+  [data-reveal="print"]:not([data-revealed])
+  [data-print-picture] {
+  animation: reveal-failsafe-print 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready])
+  [data-services-plate]:not([data-revealed])
+  [data-plate-number] {
+  animation: reveal-failsafe 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="rule"]:not([data-revealed])::before,
+html[data-motion="on"]:not([data-reveal-ready])
+  [data-reveal="ledger"]:not([data-revealed])::before {
+  animation: reveal-failsafe-rule 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="ledger"]:not([data-revealed]) > * {
+  animation: reveal-failsafe-row 0.01s linear 10s forwards;
+}
+html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="row"]:not([data-revealed]) {
+  animation: reveal-failsafe-row 0.01s linear 10s forwards;
+}
+@keyframes reveal-failsafe-rule {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes reveal-failsafe-row {
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+/* Hover in the Services section: a tile's crop marks and lift, and a lime marker under links. */
+[data-print-marks] {
+  --m: 12px;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 0 0 / var(--m) 1px,
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 0 0 / 1px var(--m),
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 100% 0 / var(--m) 1px,
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 100% 0 / 1px var(--m),
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 0 100% / var(--m) 1px,
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 0 100% / 1px var(--m),
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 100% 100% / var(--m) 1px,
+    linear-gradient(var(--color-foreground), var(--color-foreground)) 100% 100% / 1px var(--m);
+  background-repeat: no-repeat;
+  transition:
+    opacity 0.2s ease,
+    inset 0.26s var(--set-ease);
+}
+[data-service-name]:hover [data-print-marks],
+[data-service-tile]:focus-visible [data-print-marks] {
+  opacity: 1;
+  inset: -10px;
+}
+[data-print-lift] {
+  transition: translate 0.26s var(--set-ease);
+}
+[data-service-name]:hover [data-print-lift] {
+  translate: -4px -4px;
+}
+/* The one hover of every link and button: a marker sweeps in behind it over 0.26s, lime by default,
+   in a project's own colour inside Selected work, with the text turning to the ink that reads on
+   it. Longhands only, so a button keeps its own background colour. */
+.lime-sweep {
+  --sweep: var(--color-highlight);
+  background-image: linear-gradient(var(--sweep), var(--sweep));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 0% 100%;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background-size 0.26s var(--set-ease),
+    color 0.26s var(--set-ease),
+    border-color 0.26s var(--set-ease);
+}
+.lime-sweep:not(:disabled):hover,
+.lime-sweep:not(:disabled):focus-visible {
+  background-size: 100% 100%;
+}
+[data-surface="dark"] .lime-sweep:not(:disabled):hover,
+[data-surface="dark"] .lime-sweep:not(:disabled):focus-visible,
+[data-menu-root] .lime-sweep:not(:disabled):hover,
+[data-menu-root] .lime-sweep:not(:disabled):focus-visible {
+  color: var(--color-foreground);
+}
+[data-tone] .lime-sweep {
+  --sweep: var(--scene-accent);
+}
+[data-tone] .lime-sweep:hover,
+[data-tone] .lime-sweep:focus-visible {
+  color: var(--scene-bg);
+}
+
+/* A big link whose text sweeps when its whole row is hovered (the footer's email). */
+.group:hover .lime-sweep[data-sweep-group],
+.group:focus-visible .lime-sweep[data-sweep-group] {
+  background-size: 100% 100%;
+  color: var(--color-foreground);
+}
+
+/* The lime contact band: links sweep in ink, and inside its cream card they sweep in lime again. */
+[data-surface="lime"] .lime-sweep {
+  --sweep: var(--color-foreground);
+}
+[data-surface="lime"] .lime-sweep:not(:disabled):hover,
+[data-surface="lime"] .lime-sweep:not(:disabled):focus-visible {
+  color: var(--color-highlight);
+}
+[data-contact-card] .lime-sweep {
+  --sweep: var(--color-highlight);
+}
+[data-contact-card] .lime-sweep:not(:disabled):hover,
+[data-contact-card] .lime-sweep:not(:disabled):focus-visible {
+  color: var(--color-foreground);
+}
+
+/* The logos of the contact invitation: the bare marks with a soft shadow. The
+   two drawn near-white (for dark scenes) are turned dark so they read on the page. */
+[data-contact-logo] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: auto;
+  will-change: transform;
+  filter: drop-shadow(0 0.5rem 0.7rem color-mix(in srgb, var(--color-foreground) 28%, transparent));
+}
+[data-contact-logo][data-tone-tile="dark"] svg {
+  filter: invert(1);
+}
+[data-contact-logo] svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+[data-contact-still] {
+  --contact-logo: clamp(3.5rem, 7vw, 6.5rem);
+  pointer-events: none;
+}
+html[data-motion="on"] [data-contact-still] {
+  display: none;
+}
+@media (max-width: 767px) {
+  [data-contact-still]:nth-child(n + 6) {
+    display: none;
+  }
+}
+
+/* The footer: its email carries a wave that slides under it, its name fills the width, and its
+   round button fills with lime from wherever the pointer entered. */
+[data-footer-wave] {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0.5rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+[data-footer-wave] svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 300%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  transition: transform 0.7s cubic-bezier(0, 0.25, 0.5, 1);
+}
+[data-footer-wave] path {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.5px;
+}
+[data-footer-email]:hover [data-footer-wave] svg,
+[data-footer-email]:focus-visible [data-footer-wave] svg {
+  transform: translate3d(-65.5%, 0, 0);
+}
+[data-footer-name] {
+  container-type: inline-size;
+}
+[data-footer-name] p {
+  margin: 0;
+  padding-bottom: 0.17em;
+  /* Fitted so the name runs the full width: at 12.6cqw it was 84.3% of it (measured at 390, 1440
+     and 1920). The back-to-top button above it ends at the same right edge. */
+  font-size: 14.95cqw;
+  font-weight: 600;
+  line-height: 0.82;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+}
+[data-back-to-top] {
+  position: relative;
+  display: inline-grid;
+  width: clamp(3rem, 4vw, 5rem);
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+[data-back-ball] {
+  position: absolute;
+  top: var(--ball-y, 50%);
+  left: var(--ball-x, 50%);
+  width: 0;
+  height: 0;
+  border-radius: 9999px;
+  background: var(--color-highlight);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s cubic-bezier(0.4, 0, 0.1, 1),
+    height 0.6s cubic-bezier(0.4, 0, 0.1, 1);
+}
+[data-back-to-top]:hover [data-back-ball],
+[data-back-to-top]:focus-visible [data-back-ball] {
+  width: 260%;
+  height: 260%;
+}
+
+/* "Scroll down" labels under the hero panel: endless row, solid and outline alternating. */
+[data-hero-label] {
+  transition:
+    color var(--duration-base) var(--ease-standard),
+    -webkit-text-stroke-color var(--duration-base) var(--ease-standard);
+}
+/* The thin edge of each hero piece; the pieces are clipped, so only open ones show it. */
+[data-hero-seam] {
+  border-top: 1px solid color-mix(in srgb, var(--color-background) 12%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-background) 12%, transparent);
+}
+[data-hero-label][data-ghost="true"] {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-border-strong);
+}
+
+/* Selected work. Each scene (and the pinned panel) takes its colours from its tone: the project's
+   own colour world from the scene tokens. Dark scenes colour the title with the accent. */
+[data-tone="toolswift"] {
+  --scene-bg: var(--color-scene-toolswift-bg);
+  --scene-ink: var(--color-scene-toolswift-ink);
+  --scene-muted: var(--color-scene-toolswift-muted);
+  --scene-accent: var(--color-scene-toolswift-accent);
+  --scene-title: var(--color-scene-toolswift-accent);
+}
+[data-tone="smooth-erp"] {
+  --scene-bg: var(--color-scene-smooth-erp-bg);
+  --scene-ink: var(--color-scene-smooth-erp-ink);
+  --scene-muted: var(--color-scene-smooth-erp-muted);
+  --scene-accent: var(--color-scene-smooth-erp-accent);
+  --scene-title: var(--color-scene-smooth-erp-ink);
+}
+[data-tone="aligna"] {
+  --scene-bg: var(--color-scene-aligna-bg);
+  --scene-ink: var(--color-scene-aligna-ink);
+  --scene-muted: var(--color-scene-aligna-muted);
+  --scene-accent: var(--color-scene-aligna-accent);
+  --scene-title: var(--color-scene-aligna-ink);
+}
+[data-tone="wajihni"] {
+  --scene-bg: var(--color-scene-wajihni-bg);
+  --scene-ink: var(--color-scene-wajihni-ink);
+  --scene-muted: var(--color-scene-wajihni-muted);
+  --scene-accent: var(--color-scene-wajihni-accent);
+  --scene-title: var(--color-scene-wajihni-accent);
+}
+[data-tone] {
+  --scene-line: color-mix(in srgb, var(--scene-ink) 16%, transparent);
+  --scene-frame: var(--color-surface);
+  --scene-frame-dot: var(--color-border-strong);
+}
+[data-tone="toolswift"],
+[data-tone="wajihni"] {
+  --scene-frame: color-mix(in srgb, var(--scene-ink) 9%, var(--scene-bg));
+  --scene-frame-dot: var(--scene-muted);
+}
+/* A faint ground per scene: dots, ledger lines, a fine hatch, a soft glow. */
+[data-scene-texture="toolswift"] {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--scene-ink) 16%, transparent) 1px,
+    transparent 1.5px
+  );
+  background-size: 1.375rem 1.375rem;
+}
+[data-scene-texture="smooth-erp"] {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 1.7rem,
+    color-mix(in srgb, var(--scene-accent) 12%, transparent) 1.7rem calc(1.7rem + 1px)
+  );
+}
+[data-scene-texture="aligna"] {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 0.9rem,
+      color-mix(in srgb, var(--scene-accent) 7%, transparent) 0.9rem calc(0.9rem + 1px)
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0 0.9rem,
+      color-mix(in srgb, var(--scene-accent) 7%, transparent) 0.9rem calc(0.9rem + 1px)
+    );
+}
+[data-scene-texture="wajihni"] {
+  background-image: radial-gradient(
+    ellipse 55% 60% at 72% 42%,
+    color-mix(in srgb, var(--scene-accent) 24%, transparent),
+    transparent 70%
+  );
+}
+
+/* A scene's artwork stage keeps its own shape (--stage-ratio, width over height) at the largest
+   size its area allows, so each composition holds together on every screen. Pieces inside are
+   placed in percent of the stage and sized in cqw. */
+[data-scene-art] {
+  container-type: size;
+}
+[data-art-stage] {
+  position: absolute;
+  width: min(100cqw, calc(100cqh * var(--stage-ratio)));
+  aspect-ratio: var(--stage-ratio);
+  margin: auto;
+  container-type: inline-size;
+}
+/* Pieces that drift gently on their own (the translate property, so motion's transforms stay free). */
+@keyframes art-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.5cqw;
+  }
+}
+
+/* A chat message arriving, again and again; it ends shown (reduced motion stops on the last frame). */
+@keyframes bubble-pop {
+  0% {
+    opacity: 0;
+    translate: 0 0.6cqw;
+  }
+  12%,
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+/* The dots of a "typing" indicator. */
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+    opacity: 0.5;
+  }
+  30% {
+    translate: 0 -0.4cqw;
+    opacity: 1;
+  }
+}
+
+/* A slow dash running along a scene's lines once they have drawn. */
+[data-art-flow] {
+  animation: art-flow 2.2s linear infinite;
+}
+@keyframes art-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+/* Focus stays visible on every scene colour. */
+[data-tone] :focus-visible {
+  outline-color: var(--scene-ink);
+}
+
+/* The pinned Selected work panel, for wide screens with motion only (WorkStageMotion uses the same
+   query). The track gives each scene a stretch of scroll; the panel sticks to the screen while
+   the scenes change inside one card, then lets go. Elsewhere the scenes stack as cards. */
+@media (min-width: 1024px) and (min-height: 560px) {
+  html[data-motion="on"] [data-work-track] {
+    height: calc(100svh + var(--work-steps) * var(--work-step));
+  }
+  html[data-motion="on"] [data-work-panel] {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+  }
+  html[data-motion="on"] [data-work-card] {
+    --work-pad: var(--spacing-gutter);
+    --work-frame: clamp(0.5rem, 0.7vw, 0.875rem);
+    --work-top: clamp(3.5rem, 4.6vw, 5.25rem);
+    --work-bottom: clamp(3.75rem, 5vw, 5.75rem);
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--scene-bg);
+    color: var(--scene-ink);
+  }
+  /* A hairline frame just inside the screen edge. */
+  html[data-motion="on"] [data-work-card]::after {
+    content: "";
+    position: absolute;
+    inset: var(--work-frame);
+    z-index: 35;
+    border: 1px solid var(--scene-line);
+    pointer-events: none;
+  }
+  html[data-motion="on"] [data-work-scenes] {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  html[data-motion="on"] [data-work-scenes] > [data-scene] {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding-block: var(--work-top) var(--work-bottom);
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* The showing scene; before the script marks one, the first. */
+  html[data-motion="on"] [data-work-scenes] > [data-scene][data-active],
+  html[data-motion="on"] [data-work-scenes]:not(:has([data-active])) > [data-scene]:first-child {
+    z-index: 2;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  html[data-motion="on"] [data-work-scenes] [data-scene-art] {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  html[data-motion="on"] [data-work-hairline] {
+    position: absolute;
+    inset: var(--work-frame) var(--work-frame) auto;
+    z-index: 30;
+    display: flex;
+    height: 3px;
+  }
+  [data-work-hairline] > span {
+    flex: 1;
+    background-color: var(--scene-accent);
+    opacity: 0.35;
+    transition: opacity var(--duration-base) var(--ease-standard);
+  }
+  [data-work-hairline] > span[data-active] {
+    opacity: 1;
+  }
+  html[data-motion="on"] [data-work-top] {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    padding: clamp(1.25rem, 1.8vw, 2rem) var(--work-pad) 0;
+    color: var(--scene-muted);
+  }
+  html[data-motion="on"] [data-work-tabs] {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 30;
+    display: block;
+    padding: 0 var(--work-pad) clamp(1rem, 1.6vw, 1.75rem);
+  }
+  [data-work-tab] {
+    border-top: 1px solid var(--scene-line);
+    color: var(--scene-muted);
+    transition: color var(--duration-base) var(--ease-standard);
+  }
+  [data-work-tab][aria-current],
+  [data-work-tab]:hover {
+    color: var(--scene-ink);
+  }
+  [data-tab-progress] {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--scene-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  html[data-motion="on"] [data-work-scroll] {
+    position: absolute;
+    top: 50%;
+    right: calc(var(--work-frame) + clamp(0.4rem, 0.6vw, 0.75rem));
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.4rem;
+    border-radius: 999px;
+    background-color: var(--scene-bg);
+    color: var(--scene-muted);
+    transform: translateY(-50%);
+  }
+  [data-work-scroll] > span {
+    writing-mode: vertical-rl;
+  }
+  [data-work-scroll]::after {
+    content: "";
+    width: 1px;
+    height: 3rem;
+    background-color: currentColor;
+  }
+  html[data-motion="on"] [data-work-wash] {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    display: block;
+    background-color: var(--color-scene-wash);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* Lenis eases wheel scrolling itself; native smooth scrolling on top of it would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+html.lenis {
+  scroll-behavior: auto !important;
+}
+
+/* The Work index (/work). A filter bar, then every project as a numbered
+   row under three collection headings. With a mouse, the row under the pointer brings its project's
+   colour world in behind the page (use-work-world.ts): a fixed layer that wipes out from the row's
+   own height, with the captures laid on it, while the page's ink turns to the world's. The world
+   is for wide screens with a pointer only; phones keep the plain list. */
+.index-shell {
+  position: relative;
+  isolation: isolate;
+}
+.index-filters {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: clamp(1rem, 1.6vw, 1.75rem);
+}
+[data-filter-button] {
+  position: relative;
+  min-height: 2.75rem;
+  font-size: var(--text-small);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+/* The filters that contain the row being hovered carry a dot. */
+[data-filter-button][data-origin-active]::after {
+  content: "";
+  position: absolute;
+  top: 0.45rem;
+  right: 0.9rem;
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 50%;
+  background-color: var(--world-accent, var(--color-highlight));
+}
+.work-index {
+  position: relative;
+  isolation: isolate;
+  border-top: 2px solid var(--color-foreground);
+}
+.index-row {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: clamp(2.25rem, 3.6vw, 4.5rem) minmax(0, 4fr) minmax(0, 3fr) minmax(
+      0,
+      1.25fr
+    );
+  align-items: center;
+  gap: clamp(0.75rem, 1.4vw, 1.75rem);
+  min-height: clamp(6rem, 8vw, 9.5rem);
+  padding: clamp(1rem, 1.4vw, 1.75rem) 0;
+  border-bottom: 1px solid var(--color-border);
+  transition:
+    opacity 0.25s var(--set-ease),
+    border-color 0.25s var(--set-ease),
+    background-color 0.25s var(--set-ease);
+}
+html[data-motion="on"] .index-row[data-reveal="row"] {
+  transition:
+    opacity 0.4s var(--set-ease),
+    translate 0.4s var(--set-ease),
+    border-color 0.25s var(--set-ease),
+    background-color 0.25s var(--set-ease);
+}
+.index-row[hidden] {
+  display: none;
+}
+/* Stores that repeat a featured one's kind close the list as short rows: title and facts only. */
+.index-row[data-compact] {
+  min-height: 0;
+  padding: clamp(0.75rem, 1vw, 1.1rem) 0;
+}
+.index-row[data-compact] .index-title-group h3 {
+  font-size: clamp(1.25rem, 0.95rem + 0.9vw, 1.875rem);
+}
+.index-row[data-compact] .index-title-group p {
+  margin-top: 0.3em;
+}
+.index-more {
+  position: relative;
+  z-index: 2;
+  margin: clamp(2rem, 3vw, 3rem) 0 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-foreground);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* While a world is up, the other rows step back a little; the pointer's row does not. */
+.work-index[data-engaged] .index-row:not([data-active]) {
+  opacity: 0.9;
+}
+.index-row[data-active],
+.index-row[data-intent] {
+  border-bottom-color: var(--under-accent);
+}
+.index-row:has(a:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+}
+.index-number {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.25s var(--set-ease);
+}
+.index-title-group {
+  min-width: 0;
+}
+.index-title-group h3 {
+  margin: 0;
+  font-size: clamp(1.625rem, 1rem + 1.7vw, 3.25rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.index-title-group h3 a {
+  transition: color 0.25s var(--set-ease);
+}
+/* The whole row is the link. */
+.index-title-group h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+.index-title-group h3 a:focus-visible {
+  outline: 0;
+}
+.index-title-group p {
+  margin: 0.5em 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  line-height: 1.4;
+  transition: color 0.25s var(--set-ease);
+}
+.index-title-group small {
+  display: block;
+  margin-top: 0.5em;
+  color: var(--color-foreground);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.index-title-group .index-summary {
+  display: block;
+  max-width: 58ch;
+  margin-top: 0.4em;
+  line-height: 1.45;
+}
+.index-row[data-active] h3 a,
+.index-row[data-intent] h3 a {
+  color: var(--under-ink);
+}
+.index-row[data-active] .index-number,
+.index-row[data-intent] .index-number {
+  color: var(--under-accent);
+}
+.index-disciplines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.index-disciplines li {
+  padding: 0.25em 0.8em;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color 0.25s var(--set-ease),
+    border-color 0.25s var(--set-ease);
+}
+.index-row[data-active] .index-disciplines li {
+  border-color: var(--under-accent);
+}
+.index-row-aside {
+  display: grid;
+  justify-items: end;
+  gap: 0.5rem;
+  min-width: 7rem;
+  text-align: right;
+}
+.status {
+  justify-self: end;
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.index-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0.9em 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+/* The parts of an ecosystem are links of their own, so they sit above the row-wide link. */
+.index-parts li {
+  position: relative;
+  z-index: 4;
+}
+.index-parts a {
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+}
+.status[data-progress="in-progress"]::before {
+  background-color: var(--color-highlight);
+  box-shadow: 0 0 0 1px var(--color-foreground);
+}
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-right: 0.55em;
+  border-radius: 50%;
+  background-color: var(--color-muted);
+  transition: background-color 0.25s var(--set-ease);
+}
+.index-row[data-active] .status::before,
+.index-row[data-intent] .status::before {
+  background-color: var(--under-accent);
+}
+.index-discovery {
+  color: var(--under-accent);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-0.5rem);
+  transition:
+    opacity 0.2s var(--set-ease),
+    transform 0.2s var(--set-ease);
+}
+.index-row[data-active] .index-discovery,
+.index-row[data-intent] .index-discovery {
+  opacity: 1;
+  transform: none;
+}
+.index-collection-break {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: clamp(2.25rem, 3.6vw, 4.5rem) minmax(0, 4fr) minmax(0, 4fr);
+  align-items: end;
+  gap: clamp(0.75rem, 1.4vw, 1.75rem);
+  padding: clamp(2.5rem, 4vw, 4.5rem) 0 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-foreground) 42%, var(--color-border));
+  color: var(--color-foreground);
+  pointer-events: none;
+}
+.work-index-world + .index-collection-break {
+  padding-top: clamp(1.25rem, 2vw, 2rem);
+}
+.index-collection-break > span {
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  letter-spacing: 0.06em;
+}
+.index-collection-break h2 {
+  margin: 0;
+  font-size: var(--text-label);
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.index-collection-break p {
+  max-width: 44ch;
+  margin: 0;
+  justify-self: end;
+  color: var(--color-muted);
+  font-size: var(--text-small);
+  text-align: right;
+}
+
+/* The world: a fixed layer under the rows. It stops where the list stops, so the footer that is
+   uncovered below it is never painted over. */
+.work-index-world {
+  --world-origin-local: var(--world-origin-y, 50vh);
+  position: fixed;
+  inset: 0 0 var(--world-bottom, 0px) 0;
+  z-index: 0;
+  overflow: hidden;
+  background-color: var(--color-background);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.58s cubic-bezier(0.33, 1, 0.68, 1),
+    transform 0.42s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+.work-index-world[data-visible] {
+  opacity: 1;
+}
+.index-world-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  contain: layout paint style;
+  color: var(--world-accent);
+  opacity: 0;
+  clip-path: polygon(
+    0 calc(var(--world-origin-local) - 2px),
+    100% calc(var(--world-origin-local) - 22px),
+    100% calc(var(--world-origin-local) + 22px),
+    0 calc(var(--world-origin-local) + 2px)
+  );
+  transform-origin: 50% var(--world-origin-local);
+}
+.index-world-scene.is-current[data-visible] {
+  animation: index-world-enter 0.66s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.index-world-scene.is-previous {
+  animation: index-world-exit 0.68s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.work-index[data-transition="rapid"] .index-world-scene.is-current[data-visible] {
+  animation-duration: 0.22s;
+}
+.work-index[data-transition="rapid"] .index-world-scene.is-previous {
+  animation-duration: 0.24s;
+}
+@keyframes index-world-enter {
+  0% {
+    opacity: 0;
+    clip-path: polygon(
+      0 calc(var(--world-origin-local) - 2px),
+      100% calc(var(--world-origin-local) - 22px),
+      100% calc(var(--world-origin-local) + 22px),
+      0 calc(var(--world-origin-local) + 2px)
+    );
+  }
+  28% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+@keyframes index-world-exit {
+  0% {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  100% {
+    opacity: 0;
+    clip-path: polygon(0 -7%, 100% 8%, 100% 92%, 0 107%);
+    filter: saturate(0.72);
+  }
+}
+@keyframes index-world-line {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes proof-laid {
+  0% {
+    opacity: 0;
+    transform: translate(28px, 14px) rotate(1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.index-world-atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at calc(68% + var(--world-pointer-x, 0) * 3%)
+        calc(38% + var(--world-pointer-y, 0) * 2%),
+      color-mix(in srgb, var(--world-glow) 28%, transparent),
+      transparent 31%
+    ),
+    linear-gradient(
+      124deg,
+      var(--world-field) 0 44%,
+      color-mix(in srgb, var(--world-wash) 84%, var(--world-field)) 100%
+    );
+}
+.index-world-atmosphere::before,
+.index-world-atmosphere::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.index-world-atmosphere::before {
+  inset: 0;
+  opacity: 0.26;
+  background: linear-gradient(
+    106deg,
+    transparent 0 18%,
+    color-mix(in srgb, var(--world-accent) 22%, transparent) 18.1% 18.25%,
+    transparent 18.35% 74%,
+    color-mix(in srgb, var(--world-deep) 20%, transparent) 74.1% 74.25%,
+    transparent 74.35%
+  );
+  transform: translate3d(
+    calc(var(--world-pointer-x, 0) * -4px),
+    calc(var(--world-pointer-y, 0) * -2px),
+    0
+  );
+}
+.index-world-atmosphere::after {
+  inset: -20%;
+  opacity: 0.14;
+  background: repeating-linear-gradient(
+    108deg,
+    transparent 0 54px,
+    color-mix(in srgb, var(--world-accent) 25%, transparent) 55px,
+    transparent 56px 112px
+  );
+  transform: rotate(-5deg) translate3d(calc(var(--world-pointer-x, 0) * 4px), 0, 0);
+  mask-image: linear-gradient(90deg, transparent, black 30% 76%, transparent);
+}
+/* The pattern behind the captures says what kind of work it is. */
+.index-world-ambient {
+  position: absolute;
+  inset: 0;
+  opacity: 0.34;
+  transform: translate3d(
+    calc(var(--world-pointer-x, 0) * -4px),
+    calc(var(--world-pointer-y, 0) * -2px),
+    0
+  );
+}
+.index-world-scene[data-pattern="e-commerce"] .index-world-ambient {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 58px,
+      color-mix(in srgb, var(--world-accent) 24%, transparent) 59px 60px,
+      transparent 61px 116px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 138px,
+      color-mix(in srgb, var(--world-deep) 11%, transparent) 138px 139px
+    );
+  mask-image: linear-gradient(90deg, transparent, black 35%);
+}
+.index-world-scene[data-pattern="landing-pages"] .index-world-ambient {
+  opacity: 0.42;
+  background: repeating-linear-gradient(
+    116deg,
+    transparent 0 72px,
+    color-mix(in srgb, var(--world-accent) 22%, transparent) 73px 74px,
+    transparent 75px 148px
+  );
+}
+.index-world-scene[data-pattern="interactive-websites"] .index-world-ambient {
+  background:
+    radial-gradient(
+      ellipse at 25% 30%,
+      transparent 0 20%,
+      color-mix(in srgb, var(--world-accent) 28%, transparent) 20.2% 20.5%,
+      transparent 20.8%
+    ),
+    radial-gradient(
+      ellipse at 78% 68%,
+      transparent 0 26%,
+      color-mix(in srgb, var(--world-glow) 22%, transparent) 26.2% 26.5%,
+      transparent 26.8%
+    );
+}
+.index-world-scene[data-pattern="saas-products"] .index-world-ambient {
+  background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--world-accent) 30%, transparent) 0 2px,
+      transparent 3px
+    )
+    0 0 / 74px 74px;
+  mask-image: linear-gradient(90deg, transparent, black 35%);
+}
+.index-world-scene[data-pattern="dashboards"] .index-world-ambient {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 47px,
+    color-mix(in srgb, var(--world-accent) 24%, transparent) 48px 50px,
+    transparent 51px 96px
+  );
+  mask-image: linear-gradient(90deg, transparent, black 30%);
+}
+.index-world-proof {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(
+    calc(var(--world-pointer-x, 0) * 10px),
+    calc(var(--world-pointer-y, 0) * 6px),
+    0
+  );
+  transition: transform 0.5s cubic-bezier(0.22, 0.8, 0.2, 1);
+}
+.index-proof {
+  position: absolute;
+  overflow: hidden;
+  border: 8px solid var(--color-surface);
+  background-color: var(--color-surface);
+  box-shadow:
+    0 34px 60px -28px color-mix(in srgb, var(--world-deep) 70%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--world-deep) 10%, transparent);
+}
+.index-proof:not([data-loaded]) {
+  opacity: 0;
+}
+.index-proof img {
+  object-fit: cover;
+  object-position: top center;
+}
+.index-proof-main {
+  top: 50%;
+  width: min(50vw, 860px);
+  inset-inline-end: clamp(24px, 5vw, 96px);
+  translate: 0 -50%;
+  rotate: -1.4deg;
+}
+/* Registration marks at the corners of the main capture, as on a proof sheet. */
+.index-proof-main::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground)),
+    linear-gradient(var(--color-foreground), var(--color-foreground));
+  background-repeat: no-repeat;
+  background-position:
+    0 0,
+    0 0,
+    100% 0,
+    100% 0,
+    0 100%,
+    0 100%,
+    100% 100%,
+    100% 100%;
+  background-size:
+    16px 1px,
+    1px 16px,
+    16px 1px,
+    1px 16px,
+    16px 1px,
+    1px 16px,
+    16px 1px,
+    1px 16px;
+}
+.index-proof-second {
+  top: 58%;
+  width: min(22vw, 380px);
+  inset-inline-end: calc(clamp(24px, 5vw, 96px) + min(50vw, 860px) / 1.38889);
+  rotate: 2.6deg;
+}
+.index-proof-main[data-tall] {
+  width: min(28vw, 480px);
+}
+.index-world-scene.is-current .index-proof-main[data-loaded] {
+  animation: proof-laid 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.index-world-scene.is-current .index-proof-second[data-loaded] {
+  animation: proof-laid 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+}
+.index-world-register {
+  position: absolute;
+  bottom: 1.25rem;
+  inset-inline-end: 1.75rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  max-width: 52vw;
+  color: var(--world-accent);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-align: end;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+.index-world-register span:last-child {
+  color: color-mix(in srgb, var(--world-accent) 55%, var(--world-field));
+  font-weight: 650;
+}
+/* The line that ties the world to its row: it draws out either side of a small diamond. */
+.index-world-source {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--world-origin-local);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr 10px 1fr;
+  align-items: center;
+  gap: 9px;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.18s;
+}
+.work-index-world[data-visible] .index-world-source {
+  opacity: 0.78;
+}
+.index-world-source i {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--world-accent, currentColor));
+  transform: scaleX(0);
+  transform-origin: 100%;
+  animation: index-world-line 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 80ms forwards;
+}
+.index-world-source i:last-child {
+  background: linear-gradient(90deg, var(--world-accent, currentColor), transparent);
+  transform-origin: 0;
+}
+.index-world-source span {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--world-accent, currentColor);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--world-accent, currentColor) 60%, transparent);
+  transform: rotate(45deg);
+}
+/* A world that has settled stops animating, and one that is leaving never runs its loops. */
+.index-world-scene.is-previous *,
+.index-world-scene:not([data-visible]) * {
+  animation-play-state: paused !important;
+}
+.work-index:not([data-world-settled]) .index-world-ambient,
+.work-index:not([data-world-settled]) .index-world-proof {
+  will-change: transform;
+}
+.work-index-world[data-input="keyboard"] .index-world-ambient,
+.work-index-world[data-input="keyboard"] .index-world-proof {
+  transform: none;
+}
+
+/* With a world behind them the page's rows take the world's ink; the row under the pointer gets a
+   paper wash on the side the text is on, so it stays readable over the captures. */
+.index-shell[data-world-active] .index-row {
+  color: var(--world-ui);
+  border-color: color-mix(in srgb, var(--world-ui) 24%, transparent);
+}
+.index-shell[data-world-active] .work-index[data-engaged] .index-row:not([data-active]) {
+  opacity: 0.62;
+}
+.index-shell[data-world-active] .index-row[data-active] {
+  border-color: color-mix(in srgb, var(--world-accent) 72%, var(--world-ui));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--world-surface) 88%, transparent) 0,
+    color-mix(in srgb, var(--world-surface) 58%, transparent) 47%,
+    transparent 86%
+  );
+}
+.index-shell[data-world-active] .index-row[data-active] .index-title-group h3 a,
+.index-shell[data-world-active] .index-row[data-active] .index-number {
+  color: var(--world-accent);
+}
+.index-shell[data-world-active] .work-index[data-engaged] .index-row[data-intent] {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--under-accent) 72%, var(--world-ui));
+}
+.index-shell[data-world-active] .index-row[data-intent] .index-title-group h3 a,
+.index-shell[data-world-active] .index-row[data-intent] .index-number {
+  color: var(--under-accent);
+}
+.index-shell[data-world-active] .index-collection-break {
+  color: var(--world-ui);
+  border-color: color-mix(in srgb, var(--world-ui) 30%, transparent);
+  text-shadow: 0 1px 18px color-mix(in srgb, var(--world-surface) 45%, transparent);
+}
+.index-shell[data-world-active] .index-collection-break > span,
+.index-shell[data-world-active] .index-collection-break p,
+.index-shell[data-world-active] .index-title-group p,
+.index-shell[data-world-active] .index-number {
+  color: var(--world-muted);
+}
+.index-shell[data-world-active] .index-title-group small,
+.index-shell[data-world-active] .index-row[data-active] .index-title-group p {
+  color: var(--world-ui);
+}
+.index-shell[data-world-active] .index-disciplines li {
+  border-color: color-mix(in srgb, var(--world-ui) 28%, transparent);
+}
+.index-shell[data-world-active] .index-row[data-active] .index-disciplines li {
+  border-color: color-mix(in srgb, var(--world-accent) 56%, var(--world-ui));
+  background-color: color-mix(in srgb, var(--world-surface) 45%, transparent);
+}
+.index-shell[data-world-active] [data-filter-button] {
+  color: var(--world-ui);
+  border-color: color-mix(in srgb, var(--world-ui) 55%, transparent);
+  background-color: color-mix(in srgb, var(--world-surface) 66%, transparent);
+  backdrop-filter: blur(10px);
+}
+.index-shell[data-world-active] [data-filter-button][aria-pressed="true"] {
+  color: var(--world-surface);
+  background-color: var(--world-ui);
+}
+
+/* Phones, tablets and anything without a fine pointer keep the plain list: no world. */
+@media (max-width: 760px), (hover: none), (pointer: coarse) {
+  .work-index-world {
+    display: none;
+  }
+  .index-shell[data-world-active] .index-row,
+  .index-shell[data-world-active] .index-row[data-active] {
+    color: inherit;
+    background: none;
+  }
+  .index-shell[data-world-active] .work-index[data-engaged] .index-row:not([data-active]),
+  .work-index[data-engaged] .index-row:not([data-active]) {
+    opacity: 1;
+  }
+  .index-shell[data-world-active] .index-title-group p {
+    color: var(--color-muted);
+  }
+  .index-shell[data-world-active] [data-filter-button] {
+    backdrop-filter: none;
+  }
+}
+@media (max-width: 900px) {
+  .index-world-proof {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
+  .index-row {
+    grid-template-columns: clamp(2.25rem, 3.6vw, 4.5rem) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .index-row .index-disciplines {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .index-filters {
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--spacing-gutter) * -1);
+    padding-inline: var(--spacing-gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .index-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .index-filters [data-filter-button] {
+    flex: none;
+  }
+  .work-index {
+    border-top-width: 1px;
+  }
+  .index-row {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.75rem;
+    min-height: auto;
+    padding: 1.1rem 0 1.2rem;
+  }
+  .index-title-group h3 {
+    font-size: clamp(1.625rem, 8.5vw, 2.375rem);
+    line-height: 0.95;
+  }
+  .index-row .index-disciplines {
+    display: flex;
+    grid-column: 2;
+    gap: 0.3rem;
+    margin-top: 0.25rem;
+  }
+  .index-row .index-disciplines li:nth-child(n + 3) {
+    display: none;
+  }
+  .index-row-aside {
+    grid-column: 2;
+    justify-items: start;
+    min-width: 0;
+    text-align: left;
+  }
+  .index-discovery {
+    display: none;
+  }
+  .index-collection-break {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    padding-top: 2.25rem;
+  }
+  .index-collection-break p {
+    grid-column: 2;
+    justify-self: start;
+    max-width: 34ch;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .index-world-scene.is-current[data-visible] {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    animation: none !important;
+  }
+  .index-world-scene.is-previous,
+  .index-world-source i {
+    animation: none !important;
+  }
+  .index-world-source i {
+    transform: none;
+  }
+  .index-world-ambient,
+  .index-world-proof,
+  .index-world-atmosphere::before,
+  .index-world-atmosphere::after {
+    transform: none !important;
+  }
+}
+
+/* The case study (/saas-dashboards/<slug>, /websites-ecommerce/<slug>):
+   a hero with the title, a line, a hairline list of facts and the capture opening over a tinted
+   panel; numbered chapters with the title set large, a dark one for the screens; and a closing band
+   that carries the next project in its own colour. The colours are the project's world (sampled
+   from its capture, passed in as --world-*), so nothing here is a colour literal. */
+.case-study {
+  --case-paper: var(--color-background);
+  --case-ink: var(--color-foreground);
+  --case-muted: var(--color-muted);
+  --case-line: color-mix(in srgb, var(--color-foreground) 20%, transparent);
+  --case-line-strong: color-mix(in srgb, var(--color-foreground) 55%, transparent);
+  --case-panel: color-mix(in srgb, var(--world-wash) 26%, var(--color-background));
+  --case-dark: color-mix(in srgb, var(--world-deep) 30%, var(--color-foreground));
+  --case-accent: var(--world-accent);
+  /* The accent as ink: darkened until it reads as small text on the panel and the paper. */
+  --case-ink-accent: color-mix(in srgb, var(--world-accent) 55%, var(--color-foreground));
+  /* What the hero capture opens into (RevealController reads it): corners cut top left and bottom right. */
+  --open-clip: polygon(2% 0%, 100% 0%, 100% 96%, 98% 100%, 0% 100%, 0% 4%);
+  background: var(--case-paper);
+  color: var(--case-ink);
+}
+/* A dark world's wash is dark: it tints the panel only lightly, so small text on it keeps 4.5:1. */
+.case-study[data-world-tone="dark"] {
+  --case-panel: color-mix(in srgb, var(--world-wash) 10%, var(--color-background));
+}
+.case-study [data-reveal="open"] {
+  clip-path: var(--open-clip);
+}
+.case-kicker,
+.case-chapter-no,
+.case-chapter-label,
+.case-subtitle,
+.case-facts dt,
+.case-contribution span,
+.case-outline-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+/* Hero. */
+.case-hero {
+  background: linear-gradient(var(--case-paper) 0 38%, var(--case-panel) 38%);
+  padding-top: clamp(6rem, 9vw, 9rem);
+  padding-bottom: clamp(3.5rem, 6vw, 5.5rem);
+}
+.case-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.25rem;
+}
+.case-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 2.2vw, 1.75rem);
+  position: relative;
+  z-index: 4;
+}
+.case-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin: 0;
+  color: var(--case-ink-accent);
+}
+.case-kicker > span + span::before {
+  content: "/";
+  margin-right: 0.9rem;
+  color: var(--case-muted);
+}
+.case-title {
+  max-width: 11ch;
+  margin: 0;
+  font-size: clamp(2.9rem, 4.7vw, 5.9rem);
+  font-weight: 300;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+  text-wrap: balance;
+}
+.case-summary {
+  max-width: 26rem;
+  margin: 0;
+  font-size: clamp(1.2rem, 0.95rem + 0.9vw, 1.85rem);
+  font-weight: 300;
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+.case-hero-meta {
+  position: relative;
+  z-index: 5;
+}
+.case-facts {
+  margin: 0;
+  border-top: 1px solid var(--case-ink);
+  font-size: var(--text-small);
+}
+.case-facts > div {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding-block: 0.8rem;
+  border-bottom: 1px solid var(--case-line);
+}
+.case-facts dt,
+.case-contribution span {
+  color: var(--case-muted);
+}
+.case-facts dd {
+  margin: 0;
+}
+.case-contribution {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-block: 1rem;
+  border-bottom: 1px solid var(--case-line);
+  font-size: var(--text-small);
+  line-height: 1.55;
+}
+.case-contribution p {
+  margin: 0;
+}
+.case-hero-media {
+  position: relative;
+  z-index: 3;
+  margin: 0;
+  min-width: 0;
+  background: var(--case-paper);
+}
+.case-hero-media figcaption {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid var(--case-line);
+  background: color-mix(in srgb, var(--world-accent) 14%, var(--color-background));
+  color: var(--case-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+.case-hero-media figcaption::before {
+  content: "E01";
+  flex: none;
+  color: var(--case-ink-accent);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+@media (min-width: 1024px) {
+  .case-hero {
+    background: linear-gradient(90deg, var(--case-paper) 0 36%, var(--case-panel) 36%);
+    min-height: min(56rem, 100svh);
+  }
+  .case-hero-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: auto 1fr auto;
+    column-gap: 1.5rem;
+    row-gap: 2rem;
+  }
+  .case-back {
+    grid-column: 1 / 7;
+    grid-row: 1;
+  }
+  .case-hero-copy {
+    grid-column: 1 / 6;
+    grid-row: 2;
+    align-self: center;
+  }
+  .case-hero-meta {
+    grid-column: 1 / 5;
+    grid-row: 3;
+  }
+  .case-hero-media {
+    grid-column: 5 / 13;
+    grid-row: 2 / 4;
+    align-self: start;
+  }
+  /* The title may reach over the capture's edge; the line under it stays clear of it. */
+  .case-summary {
+    max-width: min(26rem, 80%);
+  }
+}
+
+/* The chapters, numbered under the hero. */
+.case-outline {
+  border-block: 1px solid var(--case-line);
+  background: var(--case-paper);
+}
+.case-outline-title {
+  margin: 0;
+  color: var(--case-muted);
+  white-space: nowrap;
+}
+.case-outline-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: case-outline;
+  font-size: var(--text-small);
+}
+.case-outline-list li {
+  display: flex;
+  align-items: center;
+  counter-increment: case-outline;
+}
+.case-outline-list li::before {
+  content: counter(case-outline, decimal-leading-zero);
+  margin-right: 0.6rem;
+  color: var(--case-ink-accent);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+}
+.case-outline-details[open] {
+  border-top: 1px solid var(--case-line);
+}
+
+/* A chapter: its number and label, its title set large, then what it holds. */
+.case-scene {
+  padding-block: clamp(4.5rem, 9vw, 8.9rem);
+  border-top: 1px solid var(--case-line);
+  background: var(--case-paper);
+}
+.case-scene:nth-of-type(even) {
+  background: var(--case-panel);
+}
+.case-scene[data-tone="dark"] {
+  --case-ink: var(--color-background);
+  --case-muted: var(--color-border);
+  --case-line: color-mix(in srgb, var(--color-background) 22%, transparent);
+  --case-line-strong: color-mix(in srgb, var(--color-background) 55%, transparent);
+  --case-accent: var(--color-highlight);
+  --case-ink-accent: var(--color-highlight);
+  background: var(--case-dark);
+  color: var(--case-ink);
+}
+.case-chapter {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  column-gap: 1.25rem;
+  row-gap: 1.25rem;
+  margin-bottom: clamp(3.5rem, 7vw, 6.25rem);
+}
+.case-chapter-no,
+.case-chapter-label {
+  margin: 0;
+  color: var(--case-ink-accent);
+}
+.case-chapter-label {
+  grid-column: 2;
+}
+.case-chapter-title {
+  grid-column: 1 / -1;
+  max-width: 14ch;
+  margin: 0;
+  font-size: clamp(2.9rem, 5.5vw, 5.4rem);
+  font-weight: 300;
+  letter-spacing: -0.045em;
+  line-height: 0.93;
+  text-wrap: balance;
+}
+.case-body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+}
+@media (min-width: 900px) {
+  .case-chapter {
+    grid-template-columns: 3.4rem minmax(8rem, 2fr) minmax(0, 8fr);
+    align-items: start;
+  }
+  .case-chapter-label {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .case-chapter-title {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .case-body {
+    margin-left: clamp(0px, 12%, 12rem);
+  }
+}
+.case-copy {
+  display: flex;
+  flex-direction: column;
+  max-width: 46rem;
+  gap: 1.25rem;
+}
+.case-copy p {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+.case-copy .case-lead {
+  font-size: var(--text-lead);
+  font-weight: 300;
+  line-height: 1.38;
+}
+.case-split {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 5rem);
+}
+@media (min-width: 1024px) {
+  .case-split {
+    grid-template-columns: minmax(0, 8fr) minmax(16rem, 3fr);
+    align-items: start;
+  }
+  .case-aside {
+    position: sticky;
+    top: 7rem;
+  }
+}
+.case-subtitle {
+  margin: 0 0 1rem;
+  color: var(--case-ink);
+}
+.case-register {
+  max-width: 62ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--case-accent);
+  counter-reset: case-register;
+  font-size: var(--text-small);
+}
+.case-register li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  padding-block: 1.05rem;
+  border-bottom: 1px solid var(--case-line);
+  counter-increment: case-register;
+  line-height: 1.55;
+}
+.case-register li::before {
+  content: counter(case-register, decimal-leading-zero) ".";
+  color: var(--case-muted);
+  font-variant-numeric: tabular-nums;
+}
+.case-groups {
+  display: grid;
+  gap: 2.75rem clamp(2rem, 4vw, 4.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+.case-group {
+  min-width: 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--case-ink-accent);
+}
+.case-group h3 {
+  margin: 0 0 0.65rem;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.case-group p,
+.case-group li {
+  margin: 0;
+  color: var(--case-muted);
+  font-size: var(--text-small);
+  line-height: 1.6;
+}
+.case-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.case-group li {
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--case-line);
+}
+.case-group li:first-child {
+  padding-top: 0;
+}
+.case-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.case-chips li {
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--case-line-strong);
+  border-radius: 999px;
+  font-size: var(--text-small);
+}
+.case-plate {
+  padding: clamp(0.75rem, 2.2vw, 1.75rem);
+  border-radius: 0.375rem;
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+.case-responsive {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Part of a family of projects. */
+.case-family-list {
+  display: grid;
+  gap: 2.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+}
+.case-family-member {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  border-radius: 0.125rem;
+}
+.case-family-name {
+  font-size: var(--text-h3);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.case-family-part {
+  color: var(--case-muted);
+  font-size: var(--text-small);
+}
+.case-family-here {
+  color: var(--case-ink-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/* The end: the next project's name large, in a band that is this project's colour with the next
+   project's cut into its corner and a bar in the next project's accent along the bottom. */
+.case-next {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(4.25rem, 8vw, 7rem);
+  border-top: 1px solid var(--case-line);
+  background: linear-gradient(
+    165deg,
+    var(--case-paper) 0 78%,
+    color-mix(in srgb, var(--next-wash, var(--world-wash)) 40%, var(--color-background)) 78%
+  );
+}
+.case-next::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 32%;
+  height: 5px;
+  background: var(--next-accent, var(--case-accent));
+}
+.case-next-grid {
+  display: grid;
+  gap: 3.5rem;
+}
+.case-next-lead,
+.case-next-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.case-next-label,
+.case-next-side > p {
+  max-width: 32rem;
+  margin: 0 0 1.5rem;
+  color: var(--case-muted);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+.case-next-link {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.18em;
+  max-width: 12ch;
+  font-size: clamp(2.6rem, 5.4vw, 5rem);
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+.case-next-arrow {
+  flex: none;
+  margin-bottom: 0.08em;
+  color: var(--next-accent, var(--case-accent));
+  font-size: 0.55em;
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+.case-next-link:hover .case-next-arrow,
+.case-next-link:focus-visible .case-next-arrow {
+  transform: translateX(10px);
+}
+.case-next-previous span {
+  margin-right: 0.5rem;
+  color: var(--case-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.case-next-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 2rem;
+  margin-top: 0.75rem;
+}
+@media (min-width: 900px) {
+  .case-next-grid {
+    grid-template-columns: 1.2fr 1fr;
+    gap: 3.75rem;
+  }
+}

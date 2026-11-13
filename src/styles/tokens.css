@@ -1,0 +1,98 @@
+/* Design tokens. Single source of truth: color values appear ONLY in this file.
+   Every text/background pair used by components is listed in docs/design-tokens.md
+   and verified by src/styles/tokens.test.ts. Light theme only. */
+@theme static {
+  /* color */
+  --color-background: #ecf1ed;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #dfe5e0;
+  --color-foreground: #141415;
+  --color-muted: #565a58;
+  --color-accent: #1f2421;
+  --color-accent-strong: #3a403c;
+  --color-border: #cdd5cf;
+  --color-border-strong: #7b827d;
+  --color-focus: #1f4e8c;
+  --color-disabled: #767c78;
+  --color-highlight: #dcf26b;
+
+  /* Selected work scenes: each project's own colour world, sampled from its captures. bg is the
+     panel, ink the text and titles, muted the summary and quiet labels, accent the project label,
+     links and artwork (on the dark scenes it also colours the title). wash is the neutral tone the
+     panel passes through between two scenes. */
+  --color-scene-toolswift-bg: #16140f;
+  --color-scene-toolswift-ink: #f2efe6;
+  --color-scene-toolswift-muted: #b3ada0;
+  --color-scene-toolswift-accent: #f0b424;
+  --color-scene-smooth-erp-bg: #e3edf5;
+  --color-scene-smooth-erp-ink: #0f2538;
+  --color-scene-smooth-erp-muted: #3f566b;
+  --color-scene-smooth-erp-accent: #1b64a3;
+  --color-scene-aligna-bg: #f6eae1;
+  --color-scene-aligna-ink: #2a1a12;
+  --color-scene-aligna-muted: #6b4e40;
+  --color-scene-aligna-accent: #bf3d10;
+  --color-scene-wajihni-bg: #13151e;
+  --color-scene-wajihni-ink: #eceefa;
+  --color-scene-wajihni-muted: #a3a8c2;
+  --color-scene-wajihni-accent: #7d88ff;
+  --color-scene-wash: #9ea39d;
+
+  /* font families: the first entry is the self-hosted font, then system fallbacks. The site uses
+     one grotesque; the "serif" name is kept as an alias so existing classes resolve to it. */
+  --font-sans:
+    var(--font-grotesk), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-serif: var(--font-sans);
+
+  /* type scale (fluid, rem-based so zoom and user font settings scale it) */
+  --text-display: clamp(2.5rem, 1.5rem + 4vw, 6.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-hero: clamp(2.75rem, 1.1rem + 5.2vw, 6.5rem);
+  --text-hero--line-height: 0.98;
+  --text-hero--letter-spacing: -0.035em;
+  --text-mega: clamp(3.25rem, 1.5rem + 8vw, 9rem);
+  --text-mega--line-height: 0.95;
+  --text-mega--letter-spacing: -0.03em;
+  --text-h1: clamp(2rem, 1.7rem + 1.5vw, 3rem);
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.015em;
+  --text-h2: clamp(1.625rem, 1.45rem + 0.9vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h3: clamp(1.25rem, 1.15rem + 0.5vw, 1.625rem);
+  --text-h3--line-height: 1.25;
+  --text-h4: clamp(1.125rem, 1rem + 0.4vw, 1.5rem);
+  --text-h4--line-height: 1.35;
+  --text-lead: clamp(1.25rem, 0.9rem + 0.95vw, 1.875rem);
+  --text-lead--line-height: 1.5;
+  --text-body: clamp(1rem, 0.9rem + 0.3vw, 1.25rem);
+  --text-body--line-height: 1.65;
+  --text-small: clamp(0.875rem, 0.8rem + 0.2vw, 1.0625rem);
+  --text-small--line-height: 1.5;
+  --text-label: clamp(0.75rem, 0.7rem + 0.2vw, 0.9375rem);
+  --text-label--line-height: 1.3;
+  --text-label--letter-spacing: 0.08em;
+
+  /* spacing and rhythm */
+  --spacing: 0.25rem;
+  --spacing-section: clamp(3rem, 2rem + 4vw, 7rem);
+  --spacing-gutter: clamp(1rem, 3.3vw, 6rem);
+  --spacing-stack: 1.5rem;
+
+  /* content widths */
+  --container-reading: clamp(40rem, 30rem + 18vw, 62rem);
+  --container-page: 200rem;
+  --container-wide: 200rem;
+
+  /* radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* motion */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}

@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body style="margin: 0">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/three/build/three.module.js",
+          "three/addons/": "/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import {
+        THREE,
+        setup,
+        accumulate,
+        areaLight,
+        keyLight,
+        shadowCatcher,
+        trim,
+        finish,
+        fail,
+      } from "/art/lib.js";
+      import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+      import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+
+      try {
+        const params = new URLSearchParams(location.search);
+        const size = Number(params.get("size") ?? 1400);
+        const frames = Number(params.get("frames") ?? 40);
+        const { renderer, scene } = setup({
+          width: size,
+          height: size,
+          exposure: 1.0,
+          envIntensity: 0.9,
+        });
+
+        // An open aligner case in Aligna's orange.
+        const shell = new THREE.MeshPhysicalMaterial({
+          color: 0xe4552a,
+          roughness: 0.42,
+          clearcoat: 0.6,
+          clearcoatRoughness: 0.3,
+        });
+        const inner = new THREE.MeshPhysicalMaterial({ color: 0xe9ddd5, roughness: 0.9 });
+        const caseGroup = new THREE.Group();
+        const base = new THREE.Mesh(new RoundedBoxGeometry(3.7, 0.56, 3.2, 6, 0.26), shell);
+        base.position.y = 0.28;
+        const well = new THREE.Mesh(new RoundedBoxGeometry(3.25, 0.08, 2.75, 4, 0.03), inner);
+        well.position.y = 0.54;
+        const lid = new THREE.Group();
+        const lidShell = new THREE.Mesh(new RoundedBoxGeometry(3.7, 0.42, 3.2, 6, 0.2), shell);
+        lidShell.position.set(0, 0.21, 1.6);
+        const lidInner = new THREE.Mesh(new RoundedBoxGeometry(3.25, 0.06, 2.75, 4, 0.03), inner);
+        lidInner.position.set(0, -0.0, 1.6);
+        lid.add(lidShell, lidInner);
+        // hinge along the back edge; open to just past upright
+        lid.position.set(0, 0.56, -1.6);
+        lid.rotation.x = -Math.PI * 0.74;
+        caseGroup.add(base, well, lid);
+        caseGroup.traverse((child) => {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        });
+        scene.add(caseGroup);
+
+        // The clear tray: rounded tooth shells along the dental arch, joined by a soft rim.
+        const shapes = [
+          [0.36, 0.56, 0.27],
+          [0.31, 0.5, 0.27],
+          [0.34, 0.56, 0.32],
+          [0.33, 0.47, 0.38],
+          [0.33, 0.45, 0.4],
+          [0.45, 0.42, 0.48],
+          [0.45, 0.4, 0.48],
+        ];
+        const teeth = [];
+        const arch = (t) => new THREE.Vector3(Math.sin(t) * 1.12, 0, -Math.cos(t) * 1.3 + 0.3);
+        const rimPoints = [];
+        for (const side of [-1, 1]) {
+          let t = 0.0;
+          shapes.forEach(([width, height, depth]) => {
+            const half = width / 2 / 1.22;
+            t += half;
+            const p = arch(side * t);
+            const q = arch(side * (t + 0.01));
+            const tangent = q.sub(p).normalize();
+            const geometry = new RoundedBoxGeometry(
+              width,
+              height,
+              depth,
+              5,
+              Math.min(width, depth) * 0.42,
+            );
+            geometry.rotateY(Math.atan2(tangent.x, tangent.z) + Math.PI / 2);
+            geometry.translate(p.x, height / 2 + 0.06, p.z);
+            teeth.push(geometry);
+            t += half + 0.012;
+          });
+        }
+        for (let t = -1.62; t <= 1.62; t += 0.06) rimPoints.push(arch(t).setY(0.1));
+        teeth.push(
+          new THREE.TubeGeometry(
+            new THREE.CatmullRomCurve3(rimPoints),
+            160,
+            0.11,
+            16,
+            false,
+          ).toNonIndexed(),
+        );
+        const tray = new THREE.Mesh(
+          mergeGeometries(teeth),
+          new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            transmission: 1,
+            thickness: 0.7,
+            roughness: 0.16,
+            ior: 1.5,
+            clearcoat: 1,
+            clearcoatRoughness: 0.05,
+            specularIntensity: 1,
+            attenuationColor: 0xa9c8f0,
+            attenuationDistance: 0.7,
+          }),
+        );
+        tray.castShadow = true;
+        tray.position.set(0, 0.6, 0.05);
+        tray.rotation.y = 0.12;
+        scene.add(tray);
+
+        scene.add(shadowCatcher(30, 0.3));
+        const light = keyLight(scene, { intensity: 2.0, position: [4, 10, 6], size: 6 });
+        const rim = new THREE.DirectionalLight(0xffffff, 1.1);
+        rim.position.set(-5, 6, -6);
+        scene.add(rim);
+        const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
+        camera.position.set(4.6, 8.2, 9.4);
+        camera.lookAt(0, 0.8, -0.2);
+        const canvas = await accumulate({
+          renderer,
+          scene,
+          camera,
+          frames,
+          jitter: areaLight(light, new THREE.Vector3(4, 10, 6), 1.4),
+        });
+        finish(trim(canvas, 16));
+      } catch (error) {
+        fail(error);
+      }
+    </script>
+  </body>
+</html>

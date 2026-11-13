@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+  <body style="margin: 0">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/three/build/three.module.js",
+          "three/addons/": "/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import {
+        THREE,
+        setup,
+        accumulate,
+        areaLight,
+        keyLight,
+        shadowCatcher,
+        trim,
+        finish,
+        fail,
+      } from "/art/lib.js";
+
+      try {
+        const params = new URLSearchParams(location.search);
+        const size = Number(params.get("size") ?? 1400);
+        const frames = Number(params.get("frames") ?? 40);
+        const { renderer, scene } = setup({ width: size, height: size, exposure: 1.05 });
+
+        // A hexagon outline with rounded points, for the bolt head and the nut.
+        const hexagon = (radius) => {
+          const shape = new THREE.Shape();
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+            const x = Math.cos(a) * radius;
+            const y = Math.sin(a) * radius;
+            if (i === 0) shape.moveTo(x, y);
+            else shape.lineTo(x, y);
+          }
+          shape.closePath();
+          return shape;
+        };
+
+        const steel = new THREE.MeshPhysicalMaterial({
+          color: 0xc7cbd1,
+          metalness: 1,
+          roughness: 0.32,
+          clearcoat: 0.3,
+          clearcoatRoughness: 0.4,
+        });
+        const brass = new THREE.MeshPhysicalMaterial({
+          color: 0xe0ad45,
+          metalness: 1,
+          roughness: 0.27,
+        });
+
+        const bolt = new THREE.Group();
+        const head = new THREE.Mesh(
+          new THREE.ExtrudeGeometry(hexagon(1), {
+            depth: 0.5,
+            bevelEnabled: true,
+            bevelThickness: 0.09,
+            bevelSize: 0.08,
+            bevelSegments: 5,
+            curveSegments: 1,
+          }),
+          steel,
+        );
+        head.rotation.x = -Math.PI / 2;
+        head.position.y = 3.6;
+        bolt.add(head);
+
+        // The shank: smooth near the head, then a sawtooth profile that reads as thread.
+        const profile = [new THREE.Vector2(0, 0), new THREE.Vector2(0.44, 0)];
+        const pitch = 0.16;
+        for (let y = 0.04; y < 2.6; y += pitch) {
+          profile.push(new THREE.Vector2(0.5, y + pitch * 0.35));
+          profile.push(new THREE.Vector2(0.43, y + pitch));
+        }
+        profile.push(
+          new THREE.Vector2(0.5, 2.7),
+          new THREE.Vector2(0.52, 3.6),
+          new THREE.Vector2(0, 3.6),
+        );
+        const shank = new THREE.Mesh(new THREE.LatheGeometry(profile, 72), steel);
+        bolt.add(shank);
+
+        const washerFace = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 0.92, 0.06, 72), steel);
+        washerFace.position.y = 3.57;
+        bolt.add(washerFace);
+
+        bolt.traverse((child) => {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        });
+        // Lie the bolt down on its side, angled across the ground.
+        bolt.rotation.z = Math.PI / 2;
+        bolt.rotation.y = -0.55;
+        bolt.position.set(0.6, 1.08, 0.2);
+        scene.add(bolt);
+
+        const nutShape = hexagon(1.0);
+        const hole = new THREE.Path();
+        hole.absarc(0, 0, 0.5, 0, Math.PI * 2, true);
+        nutShape.holes.push(hole);
+        const nut = new THREE.Mesh(
+          new THREE.ExtrudeGeometry(nutShape, {
+            depth: 0.62,
+            bevelEnabled: true,
+            bevelThickness: 0.08,
+            bevelSize: 0.08,
+            bevelSegments: 5,
+            curveSegments: 48,
+          }),
+          brass,
+        );
+        nut.castShadow = true;
+        nut.receiveShadow = true;
+        nut.rotation.x = -Math.PI / 2;
+        nut.rotation.z = 0.35;
+        nut.position.set(-2.6, 0.08, 1.6);
+        scene.add(nut);
+
+        scene.add(shadowCatcher(30, 0.38));
+        const light = keyLight(scene, { intensity: 2.4, position: [3, 10, 6], size: 7 });
+        const fill = new THREE.DirectionalLight(0xffffff, 0.6);
+        fill.position.set(-6, 4, -3);
+        scene.add(fill);
+
+        const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100);
+        camera.position.set(4.5, 9.5, 12.5);
+        camera.lookAt(-0.6, 0.6, 0.6);
+
+        const canvas = await accumulate({
+          renderer,
+          scene,
+          camera,
+          frames,
+          jitter: areaLight(light, new THREE.Vector3(3, 10, 6), 1.6),
+        });
+        finish(trim(canvas, 16));
+      } catch (error) {
+        fail(error);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+/* Recheck metrics and line wrapping when replacing the repository font. Arial covers
+   Windows/macOS; Linux uses DejaVu Sans. No download is added. */
+@font-face {
+  font-family: "Inter Tight Metrics Fallback";
+  src: local("Arial");
+  ascent-override: 95.5%;
+  descent-override: 23.8%;
+  line-gap-override: 0%;
+  size-adjust: 101.4%;
+}
+
+@font-face {
+  font-family: "Inter Tight Linux Metrics Fallback";
+  src: local("DejaVu Sans");
+  ascent-override: 109.5%;
+  descent-override: 27.3%;
+  line-gap-override: 0%;
+  size-adjust: 88.5%;
+}
