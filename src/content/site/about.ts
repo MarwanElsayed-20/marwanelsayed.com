@@ -1,7 +1,7 @@
 import type { AboutContent } from "./types";
 
 /**
- * The About paragraphs, drawn from the CV. The years of experience need updating yearly.
+ * The About paragraphs, drawn from the CV.
  * Each list holds plain-text paragraphs.
  */
 export const aboutContent: AboutContent = {
@@ -37,7 +37,7 @@ export const aboutContent: AboutContent = {
     },
   ],
   introduction: [
-    "I am a front-end engineer with 3+ years of professional experience building scalable SaaS and multi-tenant web applications with React, Next.js and TypeScript.",
+    "I am a front-end engineer building scalable SaaS and multi-tenant web applications with React, Next.js and TypeScript.",
     "My work spans two areas: websites and e-commerce, such as storefronts and landing pages, and SaaS and dashboards, such as ERP and admin interfaces.",
   ],
   approach: [
