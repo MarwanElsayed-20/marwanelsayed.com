@@ -2,6 +2,8 @@ import { projectShareMetadata } from "@/lib/share/project-share-metadata";
 import { familyFor } from "@/lib/projects/families";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/json-ld";
+import { caseStudyStructuredData } from "@/lib/structured-data";
 import { ProjectDetail } from "@/components/projects/project-detail";
 import { neighbors } from "@/lib/projects/work";
 import { productLabels } from "@/content/projects/work-order";
@@ -42,6 +44,12 @@ export default async function ProjectPage({ params }: PageProps) {
   if (!project) notFound();
   return (
     <>
+      <JsonLd
+        data={caseStudyStructuredData(
+          project,
+          projectPath(digitalExperiences.basePath, project.slug),
+        )}
+      />
       <ProjectDetail
         section={digitalExperiences}
         project={project}

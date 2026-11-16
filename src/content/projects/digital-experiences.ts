@@ -2634,7 +2634,7 @@ export const digitalExperiencesProjects: readonly Project[] = [
     title: "FalconsGT SML Isuzu",
     category: "interactive-websites",
     summary:
-      "A site for SML Isuzu trucks and buses in English and Portuguese: a model browser with specifications and comparison, quote requests and campaign pages per market.",
+      "SML Isuzu's truck and bus site in English and Portuguese: a model browser with specifications and comparison, quote requests and campaign pages per market.",
     builtWith: [
       "React",
       "TypeScript",

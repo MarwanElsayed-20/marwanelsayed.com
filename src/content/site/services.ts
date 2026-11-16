@@ -12,6 +12,8 @@ export type Service = {
   /** The service page: its title, the answer under it, what you get, and the questions asked first. */
   page: {
     title: string;
+    /** A shorter title for search results and link previews, when `title` would be cut off there. */
+    metaTitle?: string;
     /** The search description of the page. */
     description: string;
     answer: string;
@@ -91,6 +93,7 @@ export const servicesContent = {
       ],
       page: {
         title: "Websites and landing pages that explain the business",
+        metaTitle: "Websites and landing pages",
         description:
           "Marketing websites and landing pages with product pages, articles, registration and request forms, shown in real work.",
         answer:
@@ -134,6 +137,7 @@ export const servicesContent = {
       ],
       page: {
         title: "Dashboards and admin tools for teams that run on a screen",
+        metaTitle: "Dashboards and admin tools",
         description:
           "Dashboards and admin tools: data tables, validated forms, live updates and bulk imports, shown in real work.",
         answer:
@@ -225,7 +229,7 @@ export const servicesPage = {
   label: "Services",
   title: "Stores, websites, dashboards and product interfaces.",
   description:
-    "Online stores, websites and landing pages, dashboards and admin tools, and SaaS and ERP interfaces: four kinds of front-end work, each with case studies to open.",
+    "Online stores, websites and landing pages, dashboards and admin tools, and SaaS and ERP interfaces: four kinds of front-end work, each with case studies.",
   introduction:
     "Four kinds of work I take on, each with case studies you can open before deciding anything. For scope and timing, the fastest way to an answer is a short message.",
   jumpLabel: "On this page",

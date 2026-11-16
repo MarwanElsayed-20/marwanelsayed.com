@@ -77,7 +77,7 @@ export const digitalProductsProjects: readonly ProductProject[] = [
     title: "ToolSwift customer dashboard",
     category: "dashboards",
     summary:
-      "A B2B customer portal where company buyers shop with their prices and stock, check out on credit or card, and manage quotes, orders, invoices and signed documents.",
+      "A B2B customer portal where company buyers shop with their prices and stock, pay on credit or card, and manage quotes, orders, invoices and signed documents.",
     builtWith: [
       "React",
       "TypeScript",
@@ -658,7 +658,7 @@ export const digitalProductsProjects: readonly ProductProject[] = [
     title: "Camufacturing dashboard",
     category: "dashboards",
     summary:
-      "A license-management dashboard for a manufacturing-software vendor: a searchable license grid, bulk import with live progress, notifications, and users with roles.",
+      "A license-management dashboard for a manufacturing-software vendor: a searchable license grid, bulk import with live progress, notifications and user roles.",
     builtWith: [
       "Next.js",
       "React",
@@ -846,7 +846,7 @@ export const digitalProductsProjects: readonly ProductProject[] = [
     title: "Hemex dashboards",
     category: "dashboards",
     summary:
-      "The instructor dashboard and parent portal of a coding academy for children: sessions, attendance and availability for instructors, students and level booking for parents.",
+      "A coding academy for children: the instructor dashboard for sessions, attendance and availability, and the parent portal for students and level booking.",
     builtWith: [
       "Next.js",
       "React",
@@ -1037,7 +1037,7 @@ export const digitalProductsProjects: readonly ProductProject[] = [
     title: "Falcon translation dashboard",
     category: "dashboards",
     summary:
-      "An operations dashboard for a translation agency: an overview of the pipeline, new leads, projects, translators, interpreters, clients, reviews, contact requests and newsletters.",
+      "An operations dashboard for a translation agency: the pipeline at a glance, leads, projects, translators, interpreters, clients, reviews and newsletters.",
     builtWith: [
       "React",
       "MUI",

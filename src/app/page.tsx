@@ -1,4 +1,5 @@
 import { Hero } from "@/components/hero/hero";
+import { JsonLd } from "@/components/seo/json-ld";
 import { ContactCta } from "@/components/site/contact-cta";
 import { ContactSection } from "@/components/site/contact-section";
 import { destinationLinks, NotSupplied } from "@/components/site/not-supplied";
@@ -9,12 +10,14 @@ import { selectedScenes } from "@/lib/projects/selected-work";
 import { resolvedServices } from "@/lib/projects/services";
 import { siteContent } from "@/lib/site-content";
 import { metadataFor } from "@/lib/site-pages";
+import { homeStructuredData } from "@/lib/structured-data";
 
 export const metadata = metadataFor("home");
 export default function HomePage() {
   const { email, profiles, whatsapp } = siteContent.contact;
   return (
     <>
+      <JsonLd data={homeStructuredData()} />
       <Hero />
       {siteContent.home.focus ? (
         <FocusStatement text={siteContent.home.focus} action={siteContent.home.focusAction} />
