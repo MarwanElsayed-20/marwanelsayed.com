@@ -638,6 +638,16 @@ html[data-motion="on"]:not([data-reveal-ready]) [data-reveal="row"]:not([data-re
 [data-service-name]:hover [data-print-lift] {
   translate: -4px -4px;
 }
+/* A larger tap area for a small text link: an invisible layer reaching 0.5rem above and below
+   (and a little to the sides), so the link and its underline stay exactly where they are. */
+.tap-area {
+  position: relative;
+}
+.tap-area::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem -0.25rem;
+}
 /* The one hover of every link and button: a marker sweeps in behind it over 0.26s, lime by default,
    in a project's own colour inside Selected work, with the text turning to the ink that reads on
    it. Longhands only, so a button keeps its own background colour. */
@@ -1982,9 +1992,23 @@ html[data-motion="on"] .index-row[data-reveal="row"] {
 
 /* Hero. */
 .case-hero {
-  background: linear-gradient(var(--case-paper) 0 38%, var(--case-panel) 38%);
+  --case-hero-end: clamp(3.5rem, 6vw, 5.5rem);
+  background: var(--case-paper);
   padding-top: clamp(6rem, 9vw, 9rem);
-  padding-bottom: clamp(3.5rem, 6vw, 5.5rem);
+  padding-bottom: var(--case-hero-end);
+}
+/* Below the desktop layout the tinted panel sits behind the capture only: it starts just above it,
+   runs to the hero's end and spans the full width (a spread shadow, clipped to this box's height,
+   so the page never scrolls sideways). A share of the hero's height would cut through the facts,
+   whose height changes with every title and summary. */
+.case-hero-stage {
+  margin-top: -1rem;
+  margin-bottom: calc(-1 * var(--case-hero-end));
+  padding-top: 1.25rem;
+  padding-bottom: var(--case-hero-end);
+  background: var(--case-panel);
+  box-shadow: 0 0 0 100vmax var(--case-panel);
+  clip-path: inset(0 -100vmax);
 }
 .case-hero-grid {
   display: grid;
@@ -2089,6 +2113,9 @@ html[data-motion="on"] .index-row[data-reveal="row"] {
   letter-spacing: 0.1em;
 }
 @media (min-width: 1024px) {
+  .case-hero-stage {
+    display: contents;
+  }
   .case-hero {
     background: linear-gradient(90deg, var(--case-paper) 0 36%, var(--case-panel) 36%);
     min-height: min(56rem, 100svh);

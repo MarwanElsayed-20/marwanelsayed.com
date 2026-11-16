@@ -245,21 +245,23 @@ export function CaseStudy({
               </div>
             ) : null}
           </div>
-          <HeroFrame className="case-hero-media" data-reveal={project.image ? "open" : undefined}>
-            <PreviewFrame
-              title={project.title}
-              image={project.image}
-              priority
-              sizes="(min-width: 72rem) 56vw, 100vw"
-            />
-            {project.image ? (
-              <figcaption>
-                {project.image.kind === "capture"
-                  ? CAPTURE_NOTE
-                  : (project.image.caption ?? project.image.alt ?? project.title)}
-              </figcaption>
-            ) : null}
-          </HeroFrame>
+          <div className="case-hero-stage">
+            <HeroFrame className="case-hero-media" data-reveal={project.image ? "open" : undefined}>
+              <PreviewFrame
+                title={project.title}
+                image={project.image}
+                priority
+                sizes="(min-width: 72rem) 56vw, 100vw"
+              />
+              {project.image ? (
+                <figcaption>
+                  {project.image.kind === "capture"
+                    ? CAPTURE_NOTE
+                    : (project.image.caption ?? project.image.alt ?? project.title)}
+                </figcaption>
+              ) : null}
+            </HeroFrame>
+          </div>
         </Container>
       </header>
       <CaseStudyOutline sections={sections} />

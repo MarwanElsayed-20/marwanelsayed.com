@@ -5,7 +5,8 @@ import { SplitWords } from "@/components/ui/split-words";
 import { servicesPage } from "@/content/site/services";
 
 /** An underlined link with a lime marker that sweeps in behind it on hover. */
-export const underlined = "lime-sweep rounded-sm border-b border-current pb-px font-semibold";
+export const underlined =
+  "lime-sweep tap-area rounded-sm border-b border-current pb-px font-semibold";
 
 /** The size of a section title on the services pages (34 to 54px). */
 export const sectionTitle =

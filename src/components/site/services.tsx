@@ -45,7 +45,7 @@ export function Services({ services }: { services: readonly ResolvedService[] })
           <div data-reveal="fade" data-reveal-delay="0.2">
             <Link
               href={servicesContent.all.href}
-              className="lime-sweep rounded-sm border-b border-current pb-px text-[clamp(0.8125rem,0.76rem+0.18vw,0.9375rem)] font-medium text-foreground"
+              className="lime-sweep tap-area rounded-sm border-b border-current pb-px text-[clamp(0.8125rem,0.76rem+0.18vw,0.9375rem)] font-medium text-foreground"
             >
               {servicesContent.all.label}
             </Link>

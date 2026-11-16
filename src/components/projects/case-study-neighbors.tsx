@@ -56,7 +56,7 @@ export function CaseStudyNeighbors({ previous, next }: WorkNeighbors) {
               <Link
                 href={previous.href}
                 variant="standalone"
-                className="case-next-previous"
+                className="case-next-previous tap-area"
                 aria-label={`Previous project: ${previous.title}`}
               >
                 <span>Previous</span> {previous.title}

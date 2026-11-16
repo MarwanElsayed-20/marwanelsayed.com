@@ -32,11 +32,12 @@ export const aboutContent: AboutContent = {
       place: "Route Academy",
       role: "Full-stack web development diploma",
       period: "May 2023 – Jan 2024",
-      detail: "Completed at Route Academy.",
+      detail:
+        "Before it: Professional Front-End Development and Advanced Full-Stack Development with Egypt FWD (Udacity), 2021–2022.",
     },
   ],
   introduction: [
-    "I am a front-end engineer with 4 years of professional experience building scalable SaaS and multi-tenant web applications with React, Next.js and TypeScript.",
+    "I am a front-end engineer with 3+ years of professional experience building scalable SaaS and multi-tenant web applications with React, Next.js and TypeScript.",
     "My work spans two areas: websites and e-commerce, such as storefronts and landing pages, and SaaS and dashboards, such as ERP and admin interfaces.",
   ],
   approach: [
@@ -64,7 +65,7 @@ export const aboutPage = {
   current: {
     label: "Current work",
     title: "Front-end engineering for a headless e-commerce platform.",
-    body: "I work remotely at Webelocity, building its interfaces. The work from it shown here is ToolSwift.",
+    body: "I work remotely at Webelocity, building the interfaces of ToolSwift, its headless e-commerce platform. The three projects below come from that work.",
     seenLabel: "Work from it",
     seen: ["toolswift-customer-dashboard", "toolswift-admin-platform", "toolswift-marketing"],
   },

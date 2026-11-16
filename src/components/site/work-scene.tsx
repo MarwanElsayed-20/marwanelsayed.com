@@ -57,7 +57,7 @@ export function WorkScene({ scene }: { scene: ResolvedScene }) {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="inline-block border-b border-(--scene-accent) pb-1 text-label font-semibold tracking-[0.14em] text-(--scene-ink) uppercase"
+                className="tap-area inline-block border-b border-(--scene-accent) pb-1 text-label font-semibold tracking-[0.14em] text-(--scene-ink) uppercase"
               >
                 {link.label}
                 {scene.links.length > 1 ? (

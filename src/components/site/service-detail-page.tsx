@@ -40,7 +40,7 @@ export function ServiceDetailPage({ service, others }: ServiceDetailPageProps) {
           <header className="grid items-end gap-x-[clamp(2rem,4vw,5rem)] gap-y-10 lg:grid-cols-12">
             <div className="flex flex-col items-start gap-6 lg:col-span-7">
               <p data-reveal="fade" className="text-label tracking-widest text-muted uppercase">
-                <Link href="/services" className="lime-sweep rounded-sm">
+                <Link href="/services" className="lime-sweep tap-area rounded-sm">
                   {servicePageLabels.crumb}
                 </Link>
               </p>
