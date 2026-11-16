@@ -56,13 +56,15 @@ test.describe("opening sequence", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(FIRST.title);
   });
 
-  test("a project page opened directly still plays the intro once and then works", async ({
-    page,
-  }) => {
-    test.slow();
-    await page.goto(projectPath);
-    await expect(html(page)).toHaveAttribute("data-loader", "done", { timeout: 15_000 });
+  test("a project page opened directly skips the intro and counts it as seen", async ({ page }) => {
+    await page.goto(projectPath, { waitUntil: "domcontentloaded" });
+    // Set before first paint, so the intro never covers the page.
+    await expect(html(page)).toHaveAttribute("data-loader", "done");
+    await expect(page.locator("[data-loader-root]")).toBeHidden();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(FIRST.title);
+    expect(await page.evaluate(() => sessionStorage.getItem("portfolio:intro-seen"))).toBe("1");
+    await page.goto("/?hero=fallback");
+    await expect(html(page)).toHaveAttribute("data-loader", "done");
   });
 
   test("a failing font download cannot hold the intro", async ({ page }) => {

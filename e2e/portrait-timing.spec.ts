@@ -50,10 +50,11 @@ test.describe("with entrance motion", () => {
   });
 });
 
-test.describe("with the opening loader", () => {
+test.describe("on a first visit that starts on /about", () => {
   test.use({ entranceMotion: true, introSeen: false });
 
-  test("the portrait plays after the loader has lifted, not under it", async ({ page }) => {
+  // The intro plays only when a visit starts on the home page, so it can never cover the portrait.
+  test("the opening loader stays away and the portrait plays uncovered", async ({ page }) => {
     test.setTimeout(150_000);
     await page.addInitScript(watchPortrait);
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -71,6 +72,7 @@ test.describe("with the opening loader", () => {
           }
         ).portraitAt,
     );
+    expect(at.loader, JSON.stringify(at)).not.toBe("active");
     expect(covered(at), JSON.stringify(at)).toBe(false);
   });
 });

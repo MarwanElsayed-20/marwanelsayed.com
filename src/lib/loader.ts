@@ -10,10 +10,13 @@ export const MOTION_STORAGE_KEY = "portfolio:motion";
  * Runs in `<head>` before first paint. It sets two flags on <html>:
  * - `data-motion="on"` unless the visitor prefers reduced motion; CSS hides entrance targets only
  *   under this flag, so no-JS and reduced-motion visitors always see finished content.
- * - `data-loader`: the intro plays once per browser session and never with reduced motion.
+ * - `data-loader`: the intro plays once per browser session and never with reduced motion. It
+ *   plays only when the visit starts on the home page: a visitor who lands on a case study, a
+ *   service or /about came from a search result or a shared link for that content, so it shows at
+ *   once, and the intro then counts as seen for the rest of the session.
  * A storage failure means "skip the intro", so nothing can block a visitor.
  */
-export const loaderBootScript = `(function(){var d=document.documentElement,seen=false,off=false,reduced=false;try{reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}try{seen=sessionStorage.getItem("${LOADER_STORAGE_KEY}")==="1";off=sessionStorage.getItem("${MOTION_STORAGE_KEY}")==="off"}catch(e){seen=true}if(!reduced&&!off)d.dataset.motion="on";if(seen||reduced){d.dataset.loader="done"}else{d.dataset.loader="active";d.dataset.pageState="loading"}})();`;
+export const loaderBootScript = `(function(){var d=document.documentElement,seen=false,off=false,reduced=false;try{reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}try{seen=sessionStorage.getItem("${LOADER_STORAGE_KEY}")==="1";off=sessionStorage.getItem("${MOTION_STORAGE_KEY}")==="off";if(!seen&&location.pathname!=="/"){seen=true;sessionStorage.setItem("${LOADER_STORAGE_KEY}","1")}}catch(e){seen=true}if(!reduced&&!off)d.dataset.motion="on";if(seen||reduced){d.dataset.loader="done"}else{d.dataset.loader="active";d.dataset.pageState="loading"}})();`;
 
 /** `images`: every image in the first viewport has loaded (or failed; a failure never blocks). */
 export type LoaderSteps = { hydrated: boolean; fonts: boolean; images: boolean };

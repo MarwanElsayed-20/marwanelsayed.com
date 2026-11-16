@@ -66,6 +66,30 @@ describe("loaderBootScript", () => {
     ).toBeUndefined();
   });
 
+  it("plays the intro only when the visit starts on the home page", () => {
+    const start = window.location.pathname;
+    try {
+      for (const path of [
+        "/websites-ecommerce/one-lax",
+        "/saas-dashboards/aligna",
+        "/about",
+        "/services/websites",
+        "/work",
+      ]) {
+        window.history.replaceState(null, "", path);
+        const result = run(false);
+        expect(result.loader, path).toBe("done");
+        expect(result.pageState, path).toBeUndefined();
+        // Counted as seen, so going on to the home page later in the visit does not start it.
+        expect(sessionStorage.getItem("portfolio:intro-seen"), path).toBe("1");
+      }
+      window.history.replaceState(null, "", "/");
+      expect(run(false)).toMatchObject({ loader: "active", pageState: "loading" });
+    } finally {
+      window.history.replaceState(null, "", start);
+    }
+  });
+
   it("skips the intro when storage throws", () => {
     const original = Storage.prototype.getItem;
     Storage.prototype.getItem = () => {
