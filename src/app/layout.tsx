@@ -14,6 +14,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteMenu } from "@/components/layout/site-menu";
 import { SkipLink } from "@/components/layout/skip-link";
 import { WhatsAppButton } from "@/components/layout/whatsapp-button";
+import { VisitSignals } from "@/components/site/visit-signals";
 import { site, siteDescription } from "@/config/site";
 import { loaderBootScript } from "@/lib/loader";
 import { siteContent } from "@/lib/site-content";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <SmoothScroll />
         <RevealController />
         <HashFocus />
+        <VisitSignals />
         {/* The page. The menu sits behind it and pushes it aside as a card (see MenuOverlay). */}
         <div data-page-shell className="relative z-10 flex min-h-dvh flex-col bg-background">
           {/* Dims the page card while the menu is open, so the card stays opaque over the streaks. */}

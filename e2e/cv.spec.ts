@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { cvDownload } from "../src/content/site/cv";
 
@@ -47,4 +48,43 @@ test("the About page offers the CV beside See the work and Get in touch", async 
   await expect(hero.getByRole("link", { name: /^CV/ })).toHaveAttribute("href", cvDownload.href);
   await expect(hero.getByRole("link", { name: "See the work" })).toBeVisible();
   await expect(hero.getByRole("link", { name: "Get in touch" })).toBeVisible();
+});
+
+/** Records what the page hands to sendBeacon; browsers hide beacon bodies from the test runner. */
+async function recordSignals(page: Page) {
+  await page.addInitScript(() => {
+    const sent: { url: string; body: unknown }[] = [];
+    (window as unknown as { __signals: typeof sent }).__signals = sent;
+    navigator.sendBeacon = (url, data) => {
+      void (data as Blob)
+        .text()
+        .then((text) => sent.push({ url: String(url), body: JSON.parse(text) }));
+      return true;
+    };
+  });
+  return () => page.evaluate(() => (window as unknown as { __signals: unknown[] }).__signals);
+}
+
+test("a CV download is reported to the owner's dashboard once, with no personal data", async ({
+  page,
+}) => {
+  const signals = await recordSignals(page);
+  await page.goto("/?hero=fallback");
+  const cv = page.locator("[data-hero-actions]").getByRole("link", { name: /^CV/ });
+  await cv.evaluate((link) => (link as HTMLElement).click());
+  await cv.evaluate((link) => (link as HTMLElement).click());
+  await expect
+    .poll(signals)
+    .toEqual([{ url: "/api/track", body: { kind: "cv_download", path: "/", referrer: "" } }]);
+});
+
+test("opening a case study is reported to the owner's dashboard", async ({ page }) => {
+  const signals = await recordSignals(page);
+  await page.goto("/saas-dashboards/aligna");
+  await expect.poll(signals).toEqual([
+    {
+      url: "/api/track",
+      body: { kind: "case_study", path: "/saas-dashboards/aligna", referrer: "" },
+    },
+  ]);
 });
