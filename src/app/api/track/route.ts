@@ -6,13 +6,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BODY_CHARS = 1_000;
-const allow = createRateLimiter(30, 10 * 60 * 1000);
+// Page views make a busy visit send a few dozen signals; this only stops floods.
+const allow = createRateLimiter(120, 10 * 60 * 1000);
 
 /** Always the same empty answer, so the endpoint reveals nothing about what it did. */
 const done = () => new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 
 /**
- * The browser reports a CV download or a case study opened; this forwards it to the owner's
+ * The browser reports a page view, a CV download or a case study opened; this forwards it to the owner's
  * dashboard with the visitor's country. Without the dashboard configured it does nothing.
  */
 export async function POST(request: Request) {

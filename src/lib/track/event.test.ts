@@ -19,10 +19,18 @@ describe("parseVisitSignal", () => {
     ).toEqual({ kind: "cv_download", path: "/about", referrer: "linkedin.com" });
   });
 
+  it("accepts page views", () => {
+    expect(parseVisitSignal({ kind: "page_view", path: "/work" })).toEqual({
+      kind: "page_view",
+      path: "/work",
+      referrer: "",
+    });
+  });
+
   it("drops anything else", () => {
     expect(parseVisitSignal(null)).toBeNull();
     expect(parseVisitSignal([])).toBeNull();
-    expect(parseVisitSignal({ kind: "page_view", path: "/" })).toBeNull();
+    expect(parseVisitSignal({ kind: "click", path: "/" })).toBeNull();
     expect(parseVisitSignal({ kind: "cv_download", path: "https://evil.test" })).toBeNull();
     expect(parseVisitSignal({ kind: "cv_download", path: "//evil.test" })).toBeNull();
     expect(parseVisitSignal({ kind: "cv_download", path: "/<script>" })).toBeNull();

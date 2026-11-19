@@ -1,9 +1,10 @@
 /**
- * Visit signals for the owner's dashboard: a CV download or a case study opened. They carry no
- * personal data: the kind, the page path, the visitor's country (from the host's geo header) and
- * the host name of the site the visit started from. No IP address, no identifier, no cookie.
+ * Visit signals for the owner's dashboard: a page view, a CV download or a case study opened. They
+ * carry no personal data: the kind, the page path, the visitor's country (from the host's geo
+ * header) and the host name of the site the visit started from. No IP address, no identifier, no
+ * cookie.
  */
-export const VISIT_KINDS = ["cv_download", "case_study"] as const;
+export const VISIT_KINDS = ["page_view", "cv_download", "case_study"] as const;
 export type VisitKind = (typeof VISIT_KINDS)[number];
 
 /** What the browser sends to /api/track. */

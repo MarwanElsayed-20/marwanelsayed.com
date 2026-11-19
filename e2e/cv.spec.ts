@@ -73,18 +73,33 @@ test("a CV download is reported to the owner's dashboard once, with no personal 
   const cv = page.locator("[data-hero-actions]").getByRole("link", { name: /^CV/ });
   await cv.evaluate((link) => (link as HTMLElement).click());
   await cv.evaluate((link) => (link as HTMLElement).click());
-  await expect
-    .poll(signals)
-    .toEqual([{ url: "/api/track", body: { kind: "cv_download", path: "/", referrer: "" } }]);
+  await expect.poll(signals).toEqual([
+    { url: "/api/track", body: { kind: "page_view", path: "/", referrer: "" } },
+    { url: "/api/track", body: { kind: "cv_download", path: "/", referrer: "" } },
+  ]);
 });
 
-test("opening a case study is reported to the owner's dashboard", async ({ page }) => {
+test("opening a case study is reported as a page view and a case study", async ({ page }) => {
   const signals = await recordSignals(page);
   await page.goto("/saas-dashboards/aligna");
+  const path = "/saas-dashboards/aligna";
   await expect.poll(signals).toEqual([
-    {
-      url: "/api/track",
-      body: { kind: "case_study", path: "/saas-dashboards/aligna", referrer: "" },
-    },
+    { url: "/api/track", body: { kind: "page_view", path, referrer: "" } },
+    { url: "/api/track", body: { kind: "case_study", path, referrer: "" } },
   ]);
+});
+
+test("?notrack=1 keeps the owner's own device out of the numbers", async ({ page }) => {
+  const signals = await recordSignals(page);
+  await page.goto("/about?notrack=1");
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("portfolio:no-track")))
+    .toBe("1");
+  await page.goto("/work");
+  await page.waitForTimeout(500);
+  // The first view can slip out before the flag is read; nothing after it may.
+  const sent = (await signals()) as { body: { path: string } }[];
+  expect(sent.filter((signal) => signal.body.path === "/work")).toEqual([]);
+  await page.goto("/work?notrack=0");
+  await expect.poll(async () => ((await signals()) as unknown[]).length).toBeGreaterThan(0);
 });
