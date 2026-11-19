@@ -4,9 +4,9 @@ import gsap from "gsap";
 import { useEffect, useRef } from "react";
 import { duration, ease } from "@/lib/motion";
 import {
-  LOADER_MAX_MS,
-  LOADER_MIN_MS,
   LOADER_STORAGE_KEY,
+  PHONE_QUERY,
+  loaderTiming,
   progressTarget,
   remainingHold,
 } from "@/lib/loader";
@@ -33,6 +33,7 @@ export function Loader({ name, phrase }: { name: string; phrase: string }) {
     if (!root || html.dataset.loader !== "active") return;
 
     const startedAt = performance.now();
+    const timing = loaderTiming(window.matchMedia(PHONE_QUERY).matches);
     const release = lockScroll();
     const behind = Array.from(document.querySelectorAll<HTMLElement>("header, main, footer"));
     behind.forEach((element) => element.setAttribute("inert", ""));
@@ -63,7 +64,7 @@ export function Loader({ name, phrase }: { name: string; phrase: string }) {
     // The number climbs steadily over the minimum hold, but never past what has really happened.
     const pace = () => {
       if (finished) return;
-      const progress = Math.min(1, (performance.now() - startedAt) / LOADER_MIN_MS);
+      const progress = Math.min(1, (performance.now() - startedAt) / timing.minMs);
       const paced = 99 * (1 - (1 - progress) * (1 - progress));
       const target = progressTarget(steps);
       const limit = target >= 100 ? 99 : target;
@@ -129,7 +130,7 @@ export function Loader({ name, phrase }: { name: string; phrase: string }) {
         )
         // The page finishes its own entrance while it waits, so it is complete when it arrives.
         .add(() => setPageState("ready"), "<0.2")
-        .to(panel, { x: -wide, duration: 0.8, ease: ease.inOut }, "+=1.1")
+        .to(panel, { x: -wide, duration: 0.8, ease: ease.inOut }, `+=${timing.cardRestS}`)
         .to(page, { x: () => cardSlot("centre"), duration: 0.8, ease: ease.inOut }, "<")
         .to(page, { scale: 1, x: 0, duration: 0.9, ease: ease.inOut }, ">0.1")
         // The corners stay round until the page fills the screen, then they slip off its edges.
@@ -139,7 +140,8 @@ export function Loader({ name, phrase }: { name: string; phrase: string }) {
         .add(() => {
           gsap.set(page, SETTLE);
           gsap.set(curtain, { visibility: "hidden", clearProps: "opacity" });
-        });
+        })
+        .timeScale(timing.exitSpeed);
     };
 
     const teardown = () => {
@@ -151,12 +153,12 @@ export function Loader({ name, phrase }: { name: string; phrase: string }) {
       const target = progressTarget(steps);
       if (target === 100) {
         clearTimeout(holdTimer);
-        holdTimer = setTimeout(finish, remainingHold(performance.now() - startedAt, steps));
+        holdTimer = setTimeout(finish, remainingHold(performance.now() - startedAt, steps, timing));
       }
     };
 
     update();
-    const maxTimer = setTimeout(finish, LOADER_MAX_MS);
+    const maxTimer = setTimeout(finish, timing.maxMs);
     // A font failure must not hold the intro: `ready` settles either way.
     void document.fonts.ready.then(() => {
       steps.fonts = true;
@@ -181,7 +183,7 @@ export function Loader({ name, phrase }: { name: string; phrase: string }) {
         setTimeout(() => {
           watcher.disconnect();
           resolve();
-        }, 4500);
+        }, timing.heroWaitMs);
       });
     // Only what the first screen needs: images below the fold must not hold the intro.
     const viewportImages = Array.from(document.images).filter((image) => {

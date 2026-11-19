@@ -183,7 +183,6 @@ export function ContactForm({ email }: ContactFormProps) {
     <fieldset
       className="flex flex-col gap-3"
       aria-describedby={describe(field)}
-      aria-required={extra.required ? true : undefined}
       data-contact-choices={field}
     >
       <legend className={`${labelClass} mb-3`}>{legend}</legend>
@@ -194,6 +193,9 @@ export function ContactForm({ email }: ContactFormProps) {
               type="radio"
               name={field}
               value={option.value}
+              // Required is set on the radios, where assistive technology announces it; a
+              // fieldset (role group) does not support aria-required. The form validates itself.
+              required={extra.required}
               className="peer sr-only"
               onChange={extra.onChange ? () => extra.onChange?.(option.value) : undefined}
             />

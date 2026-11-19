@@ -75,11 +75,33 @@ function breadcrumb(origin: string, trail: readonly { name: string; path: string
   };
 }
 
-/** Home: the site and the person it belongs to. */
+/**
+ * The home page itself, naming the share card (the generated /opengraph-image) as its main image,
+ * so search engines prefer it to a project screenshot when they show a thumbnail for the site.
+ * The address carries no build hash: the route serves the current card either way.
+ */
+function homePage(origin: string): Node {
+  return {
+    "@type": "WebPage",
+    "@id": `${origin}/#webpage`,
+    url: `${origin}/`,
+    name: siteContent.siteName ?? "Portfolio",
+    isPartOf: { "@id": websiteId(origin) },
+    about: { "@id": personId(origin) },
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: `${origin}/opengraph-image`,
+      width: 1200,
+      height: 630,
+    },
+  };
+}
+
+/** Home: the site, the page, and the person they belong to. */
 export function homeStructuredData(env: Env = process.env): Graph | null {
   const origin = siteOrigin(env);
   if (origin === null) return null;
-  return graph([website(origin), person(origin, true, false)]);
+  return graph([website(origin), homePage(origin), person(origin, true, false)]);
 }
 
 /** /about: a profile page whose subject is the person, with the current employer. */

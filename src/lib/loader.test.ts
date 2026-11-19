@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  DESKTOP_TIMING,
   LOADER_MAX_MS,
   LOADER_MIN_MS,
+  PHONE_TIMING,
   loaderBootScript,
+  loaderTiming,
   progressTarget,
   remainingHold,
 } from "./loader";
@@ -28,6 +31,31 @@ describe("remainingHold", () => {
   it("never waits beyond the maximum when something is still pending", () => {
     expect(remainingHold(1000, none)).toBe(LOADER_MAX_MS - 1000);
     expect(remainingHold(LOADER_MAX_MS + 1, none)).toBe(0);
+  });
+});
+
+describe("loaderTiming", () => {
+  it("keeps the designed timing on larger screens", () => {
+    expect(loaderTiming(false)).toBe(DESKTOP_TIMING);
+    expect(DESKTOP_TIMING).toMatchObject({
+      minMs: LOADER_MIN_MS,
+      maxMs: LOADER_MAX_MS,
+      exitSpeed: 1,
+    });
+  });
+
+  it("runs the same sequence quicker on phones", () => {
+    expect(loaderTiming(true)).toBe(PHONE_TIMING);
+    expect(PHONE_TIMING.minMs).toBeLessThan(DESKTOP_TIMING.minMs);
+    expect(PHONE_TIMING.maxMs).toBeLessThan(DESKTOP_TIMING.maxMs);
+    expect(PHONE_TIMING.heroWaitMs).toBeLessThan(DESKTOP_TIMING.heroWaitMs);
+    expect(PHONE_TIMING.cardRestS).toBeLessThan(DESKTOP_TIMING.cardRestS);
+    expect(PHONE_TIMING.exitSpeed).toBeGreaterThan(1);
+  });
+
+  it("holds and caps a phone intro by the phone timing", () => {
+    expect(remainingHold(300, all, PHONE_TIMING)).toBe(PHONE_TIMING.minMs - 300);
+    expect(remainingHold(1000, none, PHONE_TIMING)).toBe(PHONE_TIMING.maxMs - 1000);
   });
 });
 

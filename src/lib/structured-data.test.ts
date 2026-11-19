@@ -57,6 +57,20 @@ describe("structured data", () => {
     expect(person.worksFor).toBeUndefined();
   });
 
+  it("names the share card as the home page's main image", () => {
+    const data = homeStructuredData(live);
+    const page = ofType(data, "WebPage")!;
+    expect(page.url).toBe("https://example.com/");
+    expect(page.isPartOf).toEqual({ "@id": ofType(data, "WebSite")!["@id"] });
+    expect(page.about).toEqual({ "@id": ofType(data, "Person")!["@id"] });
+    expect(page.primaryImageOfPage).toEqual({
+      "@type": "ImageObject",
+      url: "https://example.com/opengraph-image",
+      width: 1200,
+      height: 630,
+    });
+  });
+
   it("makes /about a profile page about the person, with the current employer", () => {
     const data = aboutStructuredData(live);
     const page = ofType(data, "ProfilePage")!;

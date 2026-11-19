@@ -4,6 +4,47 @@ export const LOADER_MIN_MS = 2600;
 /** The intro always ends by this, even if a resource never settles. */
 export const LOADER_MAX_MS = 6000;
 
+/**
+ * How long each part of the intro takes. Phones get the same sequence, quicker: visitors there
+ * often arrive from a recruiter's message or a search on the go, and the full desktop timing kept
+ * the home page hidden for about 8 seconds.
+ */
+export type LoaderTiming = {
+  /** The counter shows for at least this long. */
+  minMs: number;
+  /** The intro ends by this even if something never settles. */
+  maxMs: number;
+  /** The longest wait for the hero scene to draw before the intro moves on. */
+  heroWaitMs: number;
+  /** Playback speed of the exit sequence (1 = as designed). */
+  exitSpeed: number;
+  /** Seconds the panel rests as a card before it slides away, at speed 1. */
+  cardRestS: number;
+};
+
+export const DESKTOP_TIMING: LoaderTiming = {
+  minMs: LOADER_MIN_MS,
+  maxMs: LOADER_MAX_MS,
+  heroWaitMs: 4500,
+  exitSpeed: 1,
+  cardRestS: 1.1,
+};
+
+export const PHONE_TIMING: LoaderTiming = {
+  minMs: 1500,
+  maxMs: 3500,
+  heroWaitMs: 2000,
+  exitSpeed: 1.6,
+  cardRestS: 0.4,
+};
+
+/** Phones and small tablets in portrait: the same breakpoint as the site's `md`. */
+export const PHONE_QUERY = "(max-width: 767px)";
+
+export function loaderTiming(isPhone: boolean): LoaderTiming {
+  return isPhone ? PHONE_TIMING : DESKTOP_TIMING;
+}
+
 export const MOTION_STORAGE_KEY = "portfolio:motion";
 
 /**
@@ -27,7 +68,11 @@ export function progressTarget({ hydrated, fonts, images }: LoaderSteps): number
 }
 
 /** Milliseconds to wait before finishing, given when the loader started and what has settled. */
-export function remainingHold(elapsedMs: number, steps: LoaderSteps): number {
-  if (progressTarget(steps) < 100) return Math.max(0, LOADER_MAX_MS - elapsedMs);
-  return Math.max(0, LOADER_MIN_MS - elapsedMs);
+export function remainingHold(
+  elapsedMs: number,
+  steps: LoaderSteps,
+  timing: LoaderTiming = DESKTOP_TIMING,
+): number {
+  if (progressTarget(steps) < 100) return Math.max(0, timing.maxMs - elapsedMs);
+  return Math.max(0, timing.minMs - elapsedMs);
 }
