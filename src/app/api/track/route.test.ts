@@ -46,8 +46,19 @@ describe("POST /api/track", () => {
       kind: "cv_download",
       path: "/",
       referrer: "linkedin.com",
+      detail: "",
       country: "QA",
     });
+  });
+
+  it("adds the browser to a page error, and refuses kinds only the server may send", async () => {
+    await post({ kind: "client_error", path: "/work", detail: "TypeError: x is undefined" });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      kind: "client_error",
+      detail: "TypeError: x is undefined · Safari on iPhone",
+    });
+    await post({ kind: "form_warning", path: "/", detail: "fake" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("ignores bots, other sites, bad signals and an unconfigured dashboard", async () => {

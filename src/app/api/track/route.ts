@@ -1,6 +1,13 @@
 import { ingestConfig } from "@/lib/contact/ingest";
 import { createRateLimiter } from "@/lib/contact/rate-limit";
-import { countryCode, isBot, parseVisitSignal, visitEndpoint } from "@/lib/track/event";
+import {
+  SERVER_ONLY_KINDS,
+  browserLabel,
+  countryCode,
+  isBot,
+  parseVisitSignal,
+} from "@/lib/track/event";
+import { forwardVisit } from "@/lib/track/forward";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +20,10 @@ const allow = createRateLimiter(120, 10 * 60 * 1000);
 const done = () => new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 
 /**
- * The browser reports a page view, a CV download or a case study opened; this forwards it to the owner's
- * dashboard with the visitor's country. Without the dashboard configured it does nothing.
+ * The browser reports a page view, a CV download, a case study opened, a contact form that could
+ * not reach the site, or a page error; this forwards it to the owner's dashboard with the
+ * visitor's country (and, for page errors, the browser). Without the dashboard configured it does
+ * nothing.
  */
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
@@ -25,7 +34,8 @@ export async function POST(request: Request) {
       return done();
     }
   }
-  if (isBot(request.headers.get("user-agent"))) return done();
+  const userAgent = request.headers.get("user-agent");
+  if (isBot(userAgent)) return done();
   const dashboard = ingestConfig(process.env);
   if (!dashboard) return done();
 
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
   } catch {
     return done();
   }
-  if (!signal) return done();
+  if (!signal || SERVER_ONLY_KINDS.includes(signal.kind)) return done();
 
   const caller =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -45,19 +55,14 @@ export async function POST(request: Request) {
     "unknown";
   if (!allow(caller)) return done();
 
-  try {
-    const response = await fetch(visitEndpoint(dashboard.url), {
-      method: "POST",
-      headers: { Authorization: `Bearer ${dashboard.secret}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...signal,
-        country: countryCode(request.headers.get("x-vercel-ip-country")),
-      }),
-      signal: AbortSignal.timeout(5_000),
-    });
-    if (!response.ok) console.error("track: dashboard rejected the visit:", response.status);
-  } catch {
-    console.error("track: dashboard unreachable");
-  }
+  const detail =
+    signal.kind === "client_error"
+      ? `${signal.detail} · ${browserLabel(userAgent)}`
+      : signal.detail;
+  await forwardVisit(dashboard, {
+    ...signal,
+    detail: detail.slice(0, 200),
+    country: countryCode(request.headers.get("x-vercel-ip-country")),
+  });
   return done();
 }

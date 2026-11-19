@@ -1,19 +1,46 @@
 /**
- * Visit signals for the owner's dashboard: a page view, a CV download or a case study opened. They
- * carry no personal data: the kind, the page path, the visitor's country (from the host's geo
- * header) and the host name of the site the visit started from. No IP address, no identifier, no
- * cookie.
+ * Visit signals for the owner's dashboard: a page view, a CV download, a case study opened, or an
+ * error (a contact form that failed, a page that broke). They carry no personal data: the kind,
+ * the page path, the visitor's country (from the host's geo header), the host name of the site the
+ * visit started from and, for errors, a short cleaned description. No IP address, no identifier,
+ * no cookie, never the form's contents.
  */
-export const VISIT_KINDS = ["page_view", "cv_download", "case_study"] as const;
+export const VISIT_KINDS = [
+  "page_view",
+  "cv_download",
+  "case_study",
+  "form_error",
+  "form_warning",
+  "client_error",
+] as const;
 export type VisitKind = (typeof VISIT_KINDS)[number];
 
-/** What the browser sends to /api/track. */
-export type VisitSignal = { kind: VisitKind; path: string; referrer: string };
+/** Kinds only the portfolio's server reports; a browser may not send them. */
+export const SERVER_ONLY_KINDS: readonly VisitKind[] = ["form_warning"];
+
+/** What the browser sends to /api/track. `detail` is empty except for errors. */
+export type VisitSignal = { kind: VisitKind; path: string; referrer: string; detail: string };
 
 /** What the portfolio forwards to the dashboard. */
 export type VisitEvent = VisitSignal & { country: string };
 
 const MAX_PATH = 200;
+const MAX_DETAIL = 200;
+
+/**
+ * An error description fit to store: one line, at most 200 characters, with anything that could
+ * identify a person (email addresses, long numbers, query strings) taken out.
+ */
+export function cleanDetail(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  return raw
+    .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[email]")
+    .replace(/\?[^\s]*/g, "")
+    .replace(/\d{6,}/g, "[number]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_DETAIL);
+}
 
 /** The host name of a referrer URL, lower case, without "www."; empty when there is none. */
 export function referrerHost(referrer: unknown): string {
@@ -29,11 +56,16 @@ export function referrerHost(referrer: unknown): string {
 /** Accepts only a known kind and a site path; anything else is dropped. */
 export function parseVisitSignal(raw: unknown): VisitSignal | null {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
-  const { kind, path, referrer } = raw as Record<string, unknown>;
+  const { kind, path, referrer, detail } = raw as Record<string, unknown>;
   if (typeof kind !== "string" || !(VISIT_KINDS as readonly string[]).includes(kind)) return null;
   if (typeof path !== "string" || !path.startsWith("/") || path.startsWith("//")) return null;
   if (path.length > MAX_PATH || /[\s<>"]/.test(path)) return null;
-  return { kind: kind as VisitKind, path, referrer: referrerHost(referrer) };
+  return {
+    kind: kind as VisitKind,
+    path,
+    referrer: referrerHost(referrer),
+    detail: cleanDetail(detail),
+  };
 }
 
 /** A two-letter country code from the host's geo header, or empty. */
@@ -62,4 +94,34 @@ export function isCaseStudyPath(path: string, basePaths: readonly string[]): boo
     const slug = path.slice(base.length + 1);
     return /^[a-z0-9-]+$/.test(slug);
   });
+}
+
+/** "Safari on iPhone", "Chrome on Windows": enough to reproduce an error, nothing more. */
+export function browserLabel(userAgent: string | null): string {
+  const ua = userAgent ?? "";
+  const browser = /Edg\//.test(ua)
+    ? "Edge"
+    : /OPR\/|Opera/.test(ua)
+      ? "Opera"
+      : /Firefox\/|FxiOS/.test(ua)
+        ? "Firefox"
+        : /Chrome\/|CriOS/.test(ua)
+          ? "Chrome"
+          : /Safari\//.test(ua)
+            ? "Safari"
+            : "a browser";
+  const system = /iPhone/.test(ua)
+    ? "iPhone"
+    : /iPad/.test(ua)
+      ? "iPad"
+      : /Android/.test(ua)
+        ? "Android"
+        : /Windows/.test(ua)
+          ? "Windows"
+          : /Mac OS X/.test(ua)
+            ? "Mac"
+            : /Linux/.test(ua)
+              ? "Linux"
+              : "";
+  return system ? `${browser} on ${system}` : browser;
 }

@@ -22,6 +22,7 @@ import {
   type ContactField,
 } from "@/lib/contact/validate";
 import { TRAP_FIELD } from "@/lib/contact/trap";
+import { sendSignal } from "@/lib/track/send";
 
 type Status = "idle" | "sending" | "sent" | "failed";
 
@@ -131,6 +132,12 @@ export function ContactForm({ email }: ContactFormProps) {
       setFailure(messageFor(response.status));
     } catch {
       setFailure("The connection failed and your message was not sent.");
+      // The server never saw this one, so the browser tells the owner's dashboard.
+      sendSignal(
+        "form_error",
+        location.pathname,
+        "The connection failed before the message reached the site",
+      );
     }
     setStatus("failed");
   }

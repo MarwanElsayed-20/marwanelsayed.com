@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { PageHeader } from "@/components/ui/page-header";
+import { reportClientError } from "@/lib/track/send";
 
 type ErrorPageProps = {
   error: Error & { digest?: string };
@@ -14,9 +16,19 @@ type ErrorPageProps = {
   unstable_retry?: () => void;
 };
 
-/** Shown inside the normal site shell when a page fails unexpectedly. It exposes no details. */
-export default function ErrorPage({ reset, retry, unstable_retry }: ErrorPageProps) {
+/** What the owner's dashboard is told when a page fails: the message and Next's error digest. */
+export function pageFailure(error: Error & { digest?: string }): string {
+  const digest = error.digest ? ` (digest ${error.digest})` : "";
+  return `Page failed to load: ${error.message || "no message"}${digest}`;
+}
+
+/**
+ * Shown inside the normal site shell when a page fails unexpectedly. It exposes no details to the
+ * visitor; the owner's dashboard is told what happened.
+ */
+export default function ErrorPage({ error, reset, retry, unstable_retry }: ErrorPageProps) {
   const recover = retry ?? unstable_retry ?? reset;
+  useEffect(() => reportClientError(pageFailure(error)), [error]);
   return (
     <>
       <PageHeader

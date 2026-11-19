@@ -3,6 +3,9 @@ import { site } from "@/config/site";
 import { buildContactEmail } from "@/lib/contact/email";
 import { ingestConfig, sendToDashboard } from "@/lib/contact/ingest";
 import { loadEmailPalette } from "@/lib/contact/palette";
+import { deliveryProblem } from "@/lib/contact/problem";
+import { countryCode } from "@/lib/track/event";
+import { forwardVisit } from "@/lib/track/forward";
 import { createRateLimiter } from "@/lib/contact/rate-limit";
 import { deliver, type DeliveryConfig } from "@/lib/contact/send";
 import { validateContact } from "@/lib/contact/validate";
@@ -27,6 +30,16 @@ function deliveryConfig(): DeliveryConfig | null {
     from: process.env.CONTACT_FROM_EMAIL?.trim() || `${site.name} <onboarding@resend.dev>`,
     endpoint: process.env.RESEND_API_URL?.trim() || undefined,
   };
+}
+
+/** The page the form was sent from, from the Referer header; "/" when it is missing. */
+function formPage(referer: string | null): string {
+  try {
+    const path = referer ? new URL(referer).pathname : "/";
+    return path.length <= 200 ? path : "/";
+  } catch {
+    return "/";
+  }
 }
 
 const reply = (status: number, body: Record<string, unknown>) =>
@@ -93,6 +106,16 @@ export async function POST(request: Request) {
   if (emailed && !emailed.ok) console.error("contact: email delivery failed:", emailed.reason);
   if (ingested && !ingested.ok)
     console.error("contact: dashboard delivery failed:", ingested.reason);
+  // Tell the owner when a copy or the whole message was lost. If the dashboard itself is down this
+  // may not arrive either; the visitor is always shown the email address in that case.
+  const problem = deliveryProblem(emailed, ingested);
+  if (problem && dashboard)
+    await forwardVisit(dashboard, {
+      ...problem,
+      path: formPage(request.headers.get("referer")),
+      referrer: "",
+      country: countryCode(request.headers.get("x-vercel-ip-country")),
+    });
   return emailed?.ok || ingested?.ok
     ? reply(200, { ok: true })
     : reply(502, { error: "delivery-failed" });
