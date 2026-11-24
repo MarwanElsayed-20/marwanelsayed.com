@@ -526,7 +526,7 @@ export const digitalProductsProjects: readonly ProductProject[] = [
       "The ERP is one app with nine modules that share one shell, one permission model and one set of table, form and print components, so a new screen in any module behaves like the rest.",
     ],
     role: [
-      "Led front-end development on the team from April 2024 to January 2025, and built the platform admin that runs client companies.",
+      "Led front-end development on the team and built the platform admin that runs client companies.",
     ],
     outcomes: [
       "Reduced the initial bundle and improved load times with dynamic imports and lazy loading, and delivered an offline-ready point of sale as a PWA.",

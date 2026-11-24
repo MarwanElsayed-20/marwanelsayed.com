@@ -16,16 +16,23 @@ export const aboutContent: AboutContent = {
         "Full time, remote, for a company in Canada. Front end of ToolSwift, a headless e-commerce SaaS platform: storefronts, B2B customer portals and the admin.",
     },
     {
+      place: "Falcons GT Motors",
+      role: "Front-end developer (contract)",
+      period: "Jan 2025 – Mar 2025",
+      detail:
+        "Contract for a company in the UAE. Car trading and export sites in Arabic, English and French, and a model site in English and Portuguese.",
+    },
+    {
       place: "FiveM",
-      role: "Front-end developer",
-      period: "Jan 2024 – Jan 2025",
+      role: "Front-end developer, then front-end lead",
+      period: "Feb 2024 – Feb 2025",
       detail:
         "Full time, on site in Egypt. Led front-end development of Smooth ERP, a multi-company ERP platform for point of sale, inventory and accounting.",
     },
     {
       place: "Freelance (Upwork)",
       role: "Front-end developer",
-      period: "Oct 2023 – present",
+      period: "Jan 2022 – present",
       detail: "Client projects: websites, landing pages and dashboards.",
     },
     {
@@ -44,7 +51,7 @@ export const aboutContent: AboutContent = {
     "I build reusable component systems so projects stay consistent and quick to extend, and I care about performance: lazy loading, parallel data fetching and careful caching in data-heavy interfaces.",
   ],
   background: [
-    "I currently work remotely as a front-end developer at Webelocity, building the interfaces for ToolSwift, a headless e-commerce platform. Before that I led front-end development of Smooth ERP at FiveM in Egypt, and I have taken on freelance client projects since 2023. I completed a full-stack web development diploma at Route Academy.",
+    "I currently work remotely as a front-end developer at Webelocity, architecting the front end of ToolSwift, a headless e-commerce platform. Before that I led front-end development of Smooth ERP at FiveM in Egypt, and I have taken on freelance client projects since 2022. I completed a full-stack web development diploma at Route Academy.",
   ],
 };
 

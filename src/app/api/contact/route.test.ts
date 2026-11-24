@@ -42,7 +42,7 @@ describe("POST /api/contact", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true });
     const [config, message] = send.mock.calls[0];
-    expect(config.to).toBe("hello@marwanelsayed.com");
+    expect(config.to).toBe("marwan@marwanelsayed.com");
     expect(message).toMatchObject({ replyTo: "sam@studio.co", subject: "New message from Sam" });
     expect(message.html).toContain("I would like a storefront.");
   });

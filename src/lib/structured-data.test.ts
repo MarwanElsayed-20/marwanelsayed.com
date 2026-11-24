@@ -51,7 +51,7 @@ describe("structured data", () => {
         expect.stringContaining("linkedin.com"),
       ]),
     );
-    expect(person.email).toBe("mailto:hello@marwanelsayed.com");
+    expect(person.email).toBe("mailto:marwan@marwanelsayed.com");
     expect((person.knowsAbout as string[]).length).toBeGreaterThan(3);
     // The employer is named on /about only.
     expect(person.worksFor).toBeUndefined();

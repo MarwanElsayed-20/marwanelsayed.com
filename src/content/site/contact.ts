@@ -5,7 +5,7 @@ import type { ContactDetails } from "./types";
  * Profile addresses use HTTPS.
  */
 export const contactDetails: ContactDetails = {
-  email: "hello@marwanelsayed.com",
+  email: "marwan@marwanelsayed.com",
   profiles: [
     { label: "GitHub", url: "https://github.com/MarwanElsayed-20" },
     { label: "LinkedIn", url: "https://www.linkedin.com/in/marwanellsayed" },
